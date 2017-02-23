@@ -1,0 +1,6 @@
+*~
+*.js
+*.swp
+.nfs*
+*.cov
+docs/build
