@@ -4,7 +4,7 @@ ENV["JAVASEIS_DATA_HOME"] = ""
 ENV["PROMAX_DATA_HOME"] = ""
 
 rundir = "./tmp"
-run(`mkdir -p $(rundir)`)
+mkdir("./tmp")
 @testset "teaseisio Tests" begin
     # issue with tracetype of number other than 1 or 2.
     # The new expectation is that the leftjustify! method considers TRC_TYPE = 1 to be live
