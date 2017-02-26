@@ -24,8 +24,8 @@ function main(disk=".")
 
     d = rand(Float32, n1, n2, n3)
     h = zeros(UInt8, headerlength(iojs), n2, n3)
-    dd = Array(Array{Float32,2}, n3)
-    hh = Array(Array{UInt8,2}, n3)
+    dd = Array{Array{Float32,2}}(n3)
+    hh = Array{Array{UInt8,2}}(n3)
     for i = 1:n3
         dd[i] = d[:,:,i]
         hh[i] = h[:,:,i]
@@ -43,7 +43,7 @@ function main(disk=".")
     end
 
     bytes = n1*n2*(4*n3 + headerlength(iojs))
-    stats = Array(Any,0)
+    stats = Array{Any}(0)
 
     # flat 1GB file
     io = open("$(disk)/test.bin", "w")
@@ -256,7 +256,7 @@ function datestamp()
 end
 
 function makeplots(stats, bytes)
-    titled = Array(String, length(stats))
+    titled = Array{String}(length(stats))
     ellapd = zeros(length(stats))
     allocd = zeros(length(stats))
 

@@ -71,24 +71,24 @@ function jsopen(
         datatype           = nothing,                    # datatype, stockdatatype[:CUSTOM], stockdatatype[:SOURCE], etc.
         dataformat         = nothing,                    # format stored on disk, Float32 or Float16
         dataorder          = "",                         # big ("BIG_ENDIAN") or little ("LITTLE_ENDIAN") endian stored on disk
-        axis_lengths       = Array(Int, 0),              # length (number of bins) along each axis
-        axis_propdefs      = Array(TracePropertyDef, 0), # axis properties (use for bin header word along each dimension)
-        axis_units         = Array(String, 0),           # axis units (stockunit[:SECONDS], stockunit[:METERS], stockunit[:UNKNOWN] etc.)
-        axis_domains       = Array(String, 0),           # axis domains (stockdomain[:SPACE], stockdomain[:TIME], stockdomain[:UNKNOWN], etc.)
-        axis_lstarts       = Array(Int, 0),              # logical start index for each axis
-        axis_lincs         = Array(Int, 0),              # logical increment between bins for each axis
-        axis_pstarts       = Array(Float64, 0),          # physical start for each axis
-        axis_pincs         = Array(Float64, 0),          # physical increment between bins for each axis
-        dataproperties     = Array(DataProperty, 0),     # add global data properties
-        properties         = Array(TracePropertyDef, 0), # add headers to the standard set
+        axis_lengths       = Array{Int}(0),              # length (number of bins) along each axis
+        axis_propdefs      = Array{TracePropertyDef}(0), # axis properties (use for bin header word along each dimension)
+        axis_units         = Array{String}(0),           # axis units (stockunit[:SECONDS], stockunit[:METERS], stockunit[:UNKNOWN] etc.)
+        axis_domains       = Array{String}(0),           # axis domains (stockdomain[:SPACE], stockdomain[:TIME], stockdomain[:UNKNOWN], etc.)
+        axis_lstarts       = Array{Int}(0),              # logical start index for each axis
+        axis_lincs         = Array{Int}(0),              # logical increment between bins for each axis
+        axis_pstarts       = Array{Float64}(0),          # physical start for each axis
+        axis_pincs         = Array{Float64}(0),          # physical increment between bins for each axis
+        dataproperties     = Array{DataProperty}(0),     # add global data properties
+        properties         = Array{TracePropertyDef}(0), # add headers to the standard set
         geom               = nothing,                    # 3 point geometry
         secondaries        = nothing,                    # secondary file-system locations for storing trace and header data, defaults to primary storage "."
         nextents           = 0,                          # number of file extents
         similarto          = "",                         # create a JavaSeis file similar to this one
-        properties_add     = Array(TracePropertyDef, 0), # only used in conjunction with similarto, dis-allowed if properties is set
-        properties_rm      = Array(TracePropertyDef, 0), # only used in conjunction with similarto, dis-allowed if properties is set
-        dataproperties_add = Array(DataProperty, 0),     # only used in conjunction with similarto, dis-allowed if dataproperties is set
-        dataproperties_rm  = Array(DataProperty, 0))     # only used in conjunction with similarto, dis-allowed if dataproperties is set
+        properties_add     = Array{TracePropertyDef}(0), # only used in conjunction with similarto, dis-allowed if properties is set
+        properties_rm      = Array{TracePropertyDef}(0), # only used in conjunction with similarto, dis-allowed if properties is set
+        dataproperties_add = Array{DataProperty}(0),     # only used in conjunction with similarto, dis-allowed if dataproperties is set
+        dataproperties_rm  = Array{DataProperty}(0))     # only used in conjunction with similarto, dis-allowed if dataproperties is set
     io = JSeis()
     io.filename = filename
     io.mode = mode
@@ -181,7 +181,7 @@ function jsopen(
 
         if length(properties_rm) != 0
             N = length(properties) - length(properties_rm)
-            properties_new = Array(TracePropertyDef, N)
+            properties_new = Array{TracePropertyDef}(N)
             k = 1
             for i = 1:length(properties), j = 1:length(properties_rm)
                 if properties_rm[j].lbl == properties[i].lbl
@@ -285,7 +285,7 @@ function jsopen_write(io::JSeis, nextents::Int, ndim::Int, description::String, 
     end
 
     # initialize trace properties to an empty array
-    io.properties = Array(TraceProperty, 0)
+    io.properties = Array{TraceProperty}(0)
 
     # trace properties, minimal set (as defined by SeisSpace / ProMAX)
     byteoffset = issimilar == false ? sspropset!(io.properties, 0) : 0
@@ -475,7 +475,7 @@ get_dataorder(xml::XMLDocument)    = strip(content(get_file_property_element(xml
 
 function get_axis_propdefs(properties::Array{TraceProperty, 1}, xml::XMLDocument)
     labels = split(content(get_file_property_element(xml, "AxisLabels")))
-    propdefs = Array(TracePropertyDef, 0)
+    propdefs = Array{TracePropertyDef}(0)
     for (i,label) in enumerate(labels)
         push!(propdefs, get_axis_propdef(properties, label, i))
     end
@@ -516,7 +516,7 @@ function get_dataformat(xml::XMLDocument)
 end
 
 function get_trace_properties(xml::XMLDocument)
-    props = Array(TraceProperty, 0)
+    props = Array{TraceProperty}(0)
     for parset in child_elements(root(xml))
         if attribute(parset, "name") == "TraceProperties"
             for parset2 in child_elements(parset)
@@ -543,7 +543,7 @@ function get_trace_properties(xml::XMLDocument)
 end
 
 function get_dataproperties(xml::XMLDocument)
-    dataprops = Array(DataProperty, 0)
+    dataprops = Array{DataProperty}(0)
     for parset in child_elements(root(xml))
         if attribute(parset, "name") == "CustomProperties"
             for par in child_elements(parset)
@@ -626,7 +626,7 @@ end
 
 function get_secondaries(xml::XMLDocument)
     n = get_nsecondaries(xml)
-    secondaries = Array(String, n)
+    secondaries = Array{String}(n)
     for i=1:n
         secondaries[i] = get_secondary(xml, i)
     end
@@ -1023,7 +1023,7 @@ end
 
 function make_extents(nextents::Int, secondaries::Array{String,1}, filename::String, axis_lengths::Array{Int64,1}, bytespertrace::Int64, basename::String)
     isec, nsec = 1, length(secondaries)
-    extents = Array(Extent, nextents)
+    extents = Array{Extent}(nextents)
     total_size = prod(axis_lengths[2:end]) * bytespertrace
     extent_size = ceil(Int64, prod(axis_lengths[3:end]) / nextents) * axis_lengths[2] * bytespertrace
     for i = 1:nextents
@@ -1769,7 +1769,7 @@ trcs = readtrcs(jsopen("data_5D.js"), :, :, 2, 2:2:10, 1:10)
 """
 function readtrcs(io::JSeis, smprng::Union{Int,Range{Int},Colon}, trcrng::Union{Int,Range{Int},Colon}, rng::Union{Int,Range{Int},Colon}...)
     smprng, trcrng, rng, nrng = parserngs(io, smprng, trcrng, rng...)
-    trcs = Array(Float32, length(smprng), length(trcrng), nrng...)
+    trcs = Array{Float32}(length(smprng), length(trcrng), nrng...)
     readtrcs_impl!(io, trcs, smprng, trcrng, rng...)
     trcs
 end
@@ -1835,7 +1835,7 @@ hdrs = readhdrs(jsopen("data_5D.js"), :, :, 2, 2:2:10, 1:10)
 """
 function readhdrs(io::JSeis, trcrng::Union{Int,Range{Int},Colon}, rng::Union{Int,Range{Int},Colon}...)
     smprng, trcrng, rng, nrng = parserngs(io, :, trcrng, rng...)
-    hdrs = Array(UInt8, headerlength(io), length(trcrng), nrng...)
+    hdrs = Array{UInt8}(headerlength(io), length(trcrng), nrng...)
     readhdrs_impl!(io, hdrs, trcrng, rng...)
     hdrs
 end
@@ -1901,8 +1901,8 @@ trcs, hdrs = read(jsopen("data_5D.js"), :, :, 2, 2:2:10, 1:10)
 """
 function read(io::JSeis, smprng::Union{Int,Range{Int},Colon}, trcrng::Union{Int,Range{Int},Colon}, rng::Union{Int,Range{Int},Colon}...)
     smprng, trcrng, rng, nrng = parserngs(io, smprng, trcrng, rng...)
-    trcs = Array(Float32, length(smprng), length(trcrng), nrng...)
-    hdrs = Array(UInt8, headerlength(io), length(trcrng), nrng...)
+    trcs = Array{Float32}(length(smprng), length(trcrng), nrng...)
+    hdrs = Array{UInt8}(headerlength(io), length(trcrng), nrng...)
     read_impl!(io, trcs, hdrs, smprng, trcrng, rng...)
     trcs, hdrs
 end
@@ -2252,7 +2252,7 @@ function leftjustify!(io::JSeis, trcs::Array{Float32, 2}, hdrs::Array{UInt8, 2})
     end
     proptyp = prop(io, "TRC_TYPE")
     j, ntrcs, nsamp, nhead = 1, size(trcs, 2), size(trcs,1), size(hdrs,1)
-    tmp_trc, tmp_hdr = Array(Float32, size(io,1)), Array(UInt8, headerlength(io))
+    tmp_trc, tmp_hdr = Array{Float32}(size(io,1)), Array{UInt8}(headerlength(io))
     for i = 1:ntrcs
         if get(proptyp, hdrs, i) != tracetype[:live]
             for j = i+1:ntrcs

@@ -75,7 +75,7 @@ in(item::String, col::Array{TraceProperty,1}) = in(item, propdef(col))
 
 function proplabel(props::Array{TracePropertyDef,1})
     n = length(props)
-    labels = Array(String, n)
+    labels = Array{String}(n)
     for i = 1:n
         labels[i] = props[i].label
     end

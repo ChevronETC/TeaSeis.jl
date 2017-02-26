@@ -89,7 +89,7 @@ function unpackframe!(c::TraceCompressor{Int16}, frame32::Array{Float32,2}, buff
 end
 
 function allocframebuf(c::TraceCompressor{Int16}, ntraces::Int)
-    bufarray = Array(UInt8, ntraces * tracelength(c))
+    bufarray = Array{UInt8}(ntraces * tracelength(c))
     IOBuffer(bufarray, true, true, length(bufarray))
 end
 
