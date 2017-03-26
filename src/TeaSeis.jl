@@ -5,6 +5,7 @@ module TeaSeis
 using LightXML
 
 import
+Base.==,
 Base.collect,
 Base.copy,
 Base.copy!,
