@@ -99,6 +99,7 @@ close(io)
 
 # jsopen / jscreate
 A JavaSeis dataset is created/opened with the `jsopen` method which returns a `JSeis`.
+A JavaSeis dataset must have a minimum of 3 dimensions.  
 
 Create a 3D JavaSeis file with 10 samples per trace, 11 traces per frame, and 12 frames per volume:
 ```julia
@@ -211,41 +212,53 @@ trcs = allocframetrcs(io)   # allocate memory for traces for a single frame
 hdrs = allocframehdrs(io)   # allocate memory for headers for a single frame
 ```
 
-Read a frame. `ifrm::Int`, `ivol::Int` and `ihyp::Int` must be consistent with the JavaSeis data context.
+Read a frame. `ifrm::Int`, `ivol::Int`, `ihyp::Int` and `i6::Int` must be consistent with the JavaSeis data context.
 ```julia
-trcs, hdrs = readframe(io, ifrm)             # read from 3D data
-trcs, hdrs = readframe(io, ifrm, ivol)       # read from 4D data
-trcs, hdrs = readframe(io, ifrm, ivol, ihyp) # read from 5D data
+trcs, hdrs = readframe(io, ifrm)                 # read from 3D data
+trcs, hdrs = readframe(io, ifrm, ivol)           # read from 4D data
+trcs, hdrs = readframe(io, ifrm, ivol, ihyp)     # read from 5D data
+trcs, hdrs = readframe(io, ifrm, ivol, ihyp, i6) # read from 6D data
+...
 ```
 
 Read a frame (in-place) using pre-allocated memory:
 ```julia
 ifrm = 1
-readframe!(io, trcs, hdrs, ifrm)             # read from 3D data
-readframe!(io, trcs, hdrs, ifrm, ivol)       # read from 4D data
-readframe!(io, trcs, hdrs, ifrm, ivol, ihyp) # read from 5D data
+readframe!(io, trcs, hdrs, ifrm)                # read from 3D data
+readframe!(io, trcs, hdrs, ifrm, ivol)          # read from 4D data
+readframe!(io, trcs, hdrs, ifrm, ivol, ihyp)    # read from 5D data
+readframe!(io, trcs, hdrs, ifrm, ivol, ihyp, i6) # read from 6D data
+...
 ```
 Note that `readframe!` methods returns the <b>fold</b> (number of live traces in the frame).
 
 Similar methods exist for reading only headers:
 ```julia
 ifrm = 1
-hdrs = readframehdrs(io, ifrm)             # read from 3D data
-hdrs = readframehdrs(io, ifrm, ivol)       # read from 4D data
-hdrs = readframehdrs(io, ifrm, ivol, ihyp) # read from 5D data
-readframehdrs!(io, hdrs, ifrm)             # in-place read from 3D data
-readframehdrs!(io, hdrs, ifrm, ivol)       # in-place read from 4D data
-readframehdrs!(io, hdrs, ifrm, ivol, ihyp) # in-place read from 5D data
+hdrs = readframehdrs(io, ifrm)                 # read from 3D data
+hdrs = readframehdrs(io, ifrm, ivol)           # read from 4D data
+hdrs = readframehdrs(io, ifrm, ivol, ihyp)     # read from 5D data
+hdrs = readframehdrs(io, ifrm, ivol, ihyp, i6) # read from 6D data
+...
+readframehdrs!(io, hdrs, ifrm)                 # in-place read from 3D data
+readframehdrs!(io, hdrs, ifrm, ivol)           # in-place read from 4D data
+readframehdrs!(io, hdrs, ifrm, ivol, ihyp)     # in-place read from 5D data
+readframehdrs!(io, hdrs, ifrm, ivol, ihyp, i6) # in-place read from 6D data
+...
 ```
 or only traces:
 ```julia
 ifrm = 1
-trcs = readframetrcs(io, ifrm)             # read from 3D data
-trcs = readframetrcs(io, ifrm, ivol)       # read from 4D data
-trcs = readframetrcs(io, ifrm, ivol, ihyp) # read from 5D data
-readframetrcs!(io, trcs, ifrm)             # in-place read from 3D data
-readframetrcs!(io, trcs, ifrm, ivol)       # in-place read from 4D data
-readframetrcs!(io, trcs, ifrm, ivol, ihyp) # in-place read from 5D data
+trcs = readframetrcs(io, ifrm)                 # read from 3D data
+trcs = readframetrcs(io, ifrm, ivol)           # read from 4D data
+trcs = readframetrcs(io, ifrm, ivol, ihyp)     # read from 5D data
+trcs = readframetrcs(io, ifrm, ivol, ihyp, i6) # read from 6D data
+...
+readframetrcs!(io, trcs, ifrm)                 # in-place read from 3D data
+readframetrcs!(io, trcs, ifrm, ivol)           # in-place read from 4D data
+readframetrcs!(io, trcs, ifrm, ivol, ihyp)     # in-place read from 5D data
+readframetrcs!(io, trcs, ifrm, ivol, ihyp, i6) # in-place read from 6D data
+...
 ```
 
 Write a frame. The frame, volume, and hypercube indices are determined from the trace properties (`hdrs::Array{UInt8,2}`)
@@ -253,7 +266,7 @@ Write a frame. The frame, volume, and hypercube indices are determined from the 
 writeframe(io, trcs, hdrs)
 ```
 
-To loop over all frames in a datset of arbitrary dimension, TeaSeis.jl provides an iterator-type API:
+To loop over all frames in a dataset of arbitrary dimension, TeaSeis.jl provides an iterator-type API:
 ```julia
 for i=1:length(io)
     trcs, hdrs = readframe(io, ind2sub(io,i)...)
@@ -281,24 +294,30 @@ Please note that the regularize method sets the `:TRC_TYPE` property appropriate
 
 Methods for finding the fold of a frame:
 ```julia
-fold(io, hdrs)             # get fold by examining the headers `hdrs` from a frame
-fold(io, ifrm)             # get fold from 3D data set using JavaSeis `TraceMap` file
-fold(io, ifrm, ivol)       # get fold from 4D data set using JavaSeis `TraceMap` file
-fold(io, ifrm, ivol, ihyp) # get fold from 5D data set using JavaSeis `TraceMap` file
+fold(io, hdrs)                 # get fold by examining the headers `hdrs` from a frame
+fold(io, ifrm)                 # get fold from a 3D data set using the JavaSeis `TraceMap` file
+fold(io, ifrm, ivol)           # get fold from a 4D data set using the JavaSeis `TraceMap` file
+fold(io, ifrm, ivol, ihyp)     # get fold from a 5D data set using the JavaSeis `TraceMap` file
+fold(io, ifrm, ivol, ihyp, i6) # get fold from a 6D data set using the JavaSeis `TraceMap` file
+...
 ```
 
 ## Alternative read/write methods (N-Dimensional slices)
 
-We supply convenience methods for reading and writing arbitrary patches of data.  If frames are not full, then the read algorithms include automatic regularization of the frames, and the write algorithms include automatic left justification.  In turn, this means that the convenience of the following methods may come at the expense of extra I/O operations.
+We supply convenience methods for reading and writing arbitrary patches of data.  If frames are not full, then the read algorithms include automatic regularization of the frames, and the write algorithms include automatic left justification.  In turn, this means that the convenience of the following methods may come at the expense of extra I/O operations.  This is especially true for JavaSeis datasets that are of 6 or more dimensions.
 
 **Reading:**
 ```julia
-trcs, hdrs = read(io, 1:10, 2:3, 4)           # read from 3D data (frame 4, traces 2-3, and time samples 1-10)
-trcs, hdrs = read(io, 1:10, 2:3, 4, :)        # read from 4D data (all volumes, frame 4, traces 2-3, and time samples 1-10)
-trcs, hdrs = read(io, 1:10, 2:3, 4, :, 2:2:4) # read from 5D data (Hypercubes 2 and 4, all volumes, frame 4, traces 2-3 and time samples 1-10)
-read!(io, trcs, hdrs, 1:10, 2:3, 4)           # in-place read from 3D data
-read!(io, trcs, hdrs, 1:10, 2:3, 4, :)        # in-place read from 4D data
-read!(io, trcs, hdrs, 1:10, 2:3, 4, :, 2:2:4) # in-place read from 5D data
+trcs, hdrs = read(io, 1:10, 2:3, 4)              # read from 3D data (frame 4, traces 2-3, and time samples 1-10)
+trcs, hdrs = read(io, 1:10, 2:3, 4, :)           # read from 4D data (all volumes, frame 4, traces 2-3, and time samples 1-10)
+trcs, hdrs = read(io, 1:10, 2:3, 4, :, 2:2:4)    # read from 5D data (Hypercubes 2 and 4, all volumes, frame 4, traces 2-3 and time samples 1-10)
+trcs, hdrs = read(io, 1:10, 2:3, 4, :, 2:2:4, 1) # read from 6D data (element 1 from the 6th dimension, hypercubes 2 and 4, all volumnes, frame 4, traces 2-3 and time samples 1-10)
+...
+read!(io, trcs, hdrs, 1:10, 2:3, 4)              # in-place read from 3D data
+read!(io, trcs, hdrs, 1:10, 2:3, 4, :)           # in-place read from 4D data
+read!(io, trcs, hdrs, 1:10, 2:3, 4, :, 2:2:4)    # in-place read from 5D data
+read!(io, trcs, hdrs, 1:10, 2:3, 4, :, 2:2:4, 1) # in-place read from 6D data
+...
 ```
 Similar methods exist for reading only traces (for example):
 ```julia
@@ -308,7 +327,7 @@ readtrcs!(io, trcs, 1:10, 2:3, 4) # in-place version of previous line
 and only headers (for example):
 ```julia
 hdrs = readhdrs(io, 2:3, 4)
-readhdrs!(io, hdrs, 2:3, 4) # in-place version of previous line
+readhdrs!(io, hdrs, 2:3, 4) # in-place version of previous line//
 ```
 Note that when using `readhdrs` and `readhdrs!` one does not specify a slice range for the first dimension.
 
@@ -325,16 +344,20 @@ it is sometimes not convenient to set headers before writing full frames.  This 
 
 The first set of API is for writing one frame at a time:
 ```julia
-writeframe(io, trcs, ifrm)             # write to 3D data
-writeframe(io, trcs, ifrm, ivol)       # write to 4D data
-writeframe(io, trcs, ifrm, ivol, ihyp) # write to 5D data
+writeframe(io, trcs, ifrm)                 # write to 3D data
+writeframe(io, trcs, ifrm, ivol)           # write to 4D data
+writeframe(io, trcs, ifrm, ivol, ihyp)     # write to 5D data
+writeframe(io, trcs, ifrm, ivol, ihyp, i6) # write to 6D data
+...
 ```
 
 The second set of API is for writing arbitrary N-dimensional slices of data:
 ```julia
-write(io, trcs, :, 1:10, 3:2:5)       # write to 3D data, all samples; traces 1-10; frames 3, 5
-write(io, trcs, :, 1:10, 3:2:5, 6)    # write to 4D data, all samples; traces 1-10; frames 3, 5; volume 6
-write(io, trcs, :, 1:10, 3:2:5, 6, :) # write to 5D data, all samples; traces 1-10; frames 3, 5; volume 6, all hypercubes
+write(io, trcs, :, 1:10, 3:2:5)            # write to 3D data, all samples; traces 1-10; frames 3, 5
+write(io, trcs, :, 1:10, 3:2:5, 6)         # write to 4D data, all samples; traces 1-10; frames 3, 5; volume 6
+write(io, trcs, :, 1:10, 3:2:5, 6, :)      # write to 5D data, all samples; traces 1-10; frames 3, 5; volume 6, all hypercubes
+write(io, trcs, :, 1:10, 3:2:5, 6, :, 1:2) # write to 6D data, all samples; traces 1-10; frames 3, 5; volume 6, all hypercubes, elements 1 and 2 from dimension 6
+...
 ```
 
 Please note that in these forms, the writeframe and write methods will create headers for you, and populate the `:TRC_TYPE` property along with the properties corresponding to the trace and frame axes of your data.  In the case of 4D data, the volume property is also populated, and in the case of 5D data, the volume and hypercube properties are also populated.

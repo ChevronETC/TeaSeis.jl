@@ -230,7 +230,7 @@ function jsopen(
 
     if mode == "w"
         ndim = length(io.axis_lengths)
-        @assert 3 <= ndim <= 5
+        @assert ndim >= 3
         @assert length(io.axis_propdefs) == ndim || length(io.axis_propdefs) == 0
         @assert length(io.axis_units)    == ndim || length(io.axis_units)    == 0
         @assert length(io.axis_domains)  == ndim || length(io.axis_domains)  == 0

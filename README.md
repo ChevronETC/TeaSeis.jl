@@ -182,7 +182,7 @@ close(io)
 # jsopen / jscreate
 
 
-A JavaSeis dataset is created/opened with the `jsopen` method which returns a `JSeis`.
+A JavaSeis dataset is created/opened with the `jsopen` method which returns a `JSeis`. A JavaSeis dataset must have a minimum of 3 dimensions.  
 
 
 Create a 3D JavaSeis file with 10 samples per trace, 11 traces per frame, and 12 frames per volume:
@@ -395,13 +395,15 @@ hdrs = allocframehdrs(io)   # allocate memory for headers for a single frame
 ```
 
 
-Read a frame. `ifrm::Int`, `ivol::Int` and `ihyp::Int` must be consistent with the JavaSeis data context.
+Read a frame. `ifrm::Int`, `ivol::Int`, `ihyp::Int` and `i6::Int` must be consistent with the JavaSeis data context.
 
 
 ```julia
-trcs, hdrs = readframe(io, ifrm)             # read from 3D data
-trcs, hdrs = readframe(io, ifrm, ivol)       # read from 4D data
-trcs, hdrs = readframe(io, ifrm, ivol, ihyp) # read from 5D data
+trcs, hdrs = readframe(io, ifrm)                 # read from 3D data
+trcs, hdrs = readframe(io, ifrm, ivol)           # read from 4D data
+trcs, hdrs = readframe(io, ifrm, ivol, ihyp)     # read from 5D data
+trcs, hdrs = readframe(io, ifrm, ivol, ihyp, i6) # read from 6D data
+...
 ```
 
 
@@ -410,9 +412,11 @@ Read a frame (in-place) using pre-allocated memory:
 
 ```julia
 ifrm = 1
-readframe!(io, trcs, hdrs, ifrm)             # read from 3D data
-readframe!(io, trcs, hdrs, ifrm, ivol)       # read from 4D data
-readframe!(io, trcs, hdrs, ifrm, ivol, ihyp) # read from 5D data
+readframe!(io, trcs, hdrs, ifrm)                # read from 3D data
+readframe!(io, trcs, hdrs, ifrm, ivol)          # read from 4D data
+readframe!(io, trcs, hdrs, ifrm, ivol, ihyp)    # read from 5D data
+readframe!(io, trcs, hdrs, ifrm, ivol, ihyp, i6) # read from 6D data
+...
 ```
 
 
@@ -424,12 +428,16 @@ Similar methods exist for reading only headers:
 
 ```julia
 ifrm = 1
-hdrs = readframehdrs(io, ifrm)             # read from 3D data
-hdrs = readframehdrs(io, ifrm, ivol)       # read from 4D data
-hdrs = readframehdrs(io, ifrm, ivol, ihyp) # read from 5D data
-readframehdrs!(io, hdrs, ifrm)             # in-place read from 3D data
-readframehdrs!(io, hdrs, ifrm, ivol)       # in-place read from 4D data
-readframehdrs!(io, hdrs, ifrm, ivol, ihyp) # in-place read from 5D data
+hdrs = readframehdrs(io, ifrm)                 # read from 3D data
+hdrs = readframehdrs(io, ifrm, ivol)           # read from 4D data
+hdrs = readframehdrs(io, ifrm, ivol, ihyp)     # read from 5D data
+hdrs = readframehdrs(io, ifrm, ivol, ihyp, i6) # read from 6D data
+...
+readframehdrs!(io, hdrs, ifrm)                 # in-place read from 3D data
+readframehdrs!(io, hdrs, ifrm, ivol)           # in-place read from 4D data
+readframehdrs!(io, hdrs, ifrm, ivol, ihyp)     # in-place read from 5D data
+readframehdrs!(io, hdrs, ifrm, ivol, ihyp, i6) # in-place read from 6D data
+...
 ```
 
 
@@ -438,12 +446,16 @@ or only traces:
 
 ```julia
 ifrm = 1
-trcs = readframetrcs(io, ifrm)             # read from 3D data
-trcs = readframetrcs(io, ifrm, ivol)       # read from 4D data
-trcs = readframetrcs(io, ifrm, ivol, ihyp) # read from 5D data
-readframetrcs!(io, trcs, ifrm)             # in-place read from 3D data
-readframetrcs!(io, trcs, ifrm, ivol)       # in-place read from 4D data
-readframetrcs!(io, trcs, ifrm, ivol, ihyp) # in-place read from 5D data
+trcs = readframetrcs(io, ifrm)                 # read from 3D data
+trcs = readframetrcs(io, ifrm, ivol)           # read from 4D data
+trcs = readframetrcs(io, ifrm, ivol, ihyp)     # read from 5D data
+trcs = readframetrcs(io, ifrm, ivol, ihyp, i6) # read from 6D data
+...
+readframetrcs!(io, trcs, ifrm)                 # in-place read from 3D data
+readframetrcs!(io, trcs, ifrm, ivol)           # in-place read from 4D data
+readframetrcs!(io, trcs, ifrm, ivol, ihyp)     # in-place read from 5D data
+readframetrcs!(io, trcs, ifrm, ivol, ihyp, i6) # in-place read from 6D data
+...
 ```
 
 
@@ -455,7 +467,7 @@ writeframe(io, trcs, hdrs)
 ```
 
 
-To loop over all frames in a datset of arbitrary dimension, TeaSeis.jl provides an iterator-type API:
+To loop over all frames in a dataset of arbitrary dimension, TeaSeis.jl provides an iterator-type API:
 
 
 ```julia
@@ -500,10 +512,12 @@ Methods for finding the fold of a frame:
 
 
 ```julia
-fold(io, hdrs)             # get fold by examining the headers `hdrs` from a frame
-fold(io, ifrm)             # get fold from 3D data set using JavaSeis `TraceMap` file
-fold(io, ifrm, ivol)       # get fold from 4D data set using JavaSeis `TraceMap` file
-fold(io, ifrm, ivol, ihyp) # get fold from 5D data set using JavaSeis `TraceMap` file
+fold(io, hdrs)                 # get fold by examining the headers `hdrs` from a frame
+fold(io, ifrm)                 # get fold from a 3D data set using the JavaSeis `TraceMap` file
+fold(io, ifrm, ivol)           # get fold from a 4D data set using the JavaSeis `TraceMap` file
+fold(io, ifrm, ivol, ihyp)     # get fold from a 5D data set using the JavaSeis `TraceMap` file
+fold(io, ifrm, ivol, ihyp, i6) # get fold from a 6D data set using the JavaSeis `TraceMap` file
+...
 ```
 
 
@@ -512,19 +526,23 @@ fold(io, ifrm, ivol, ihyp) # get fold from 5D data set using JavaSeis `TraceMap`
 ## Alternative read/write methods (N-Dimensional slices)
 
 
-We supply convenience methods for reading and writing arbitrary patches of data.  If frames are not full, then the read algorithms include automatic regularization of the frames, and the write algorithms include automatic left justification.  In turn, this means that the convenience of the following methods may come at the expense of extra I/O operations.
+We supply convenience methods for reading and writing arbitrary patches of data.  If frames are not full, then the read algorithms include automatic regularization of the frames, and the write algorithms include automatic left justification.  In turn, this means that the convenience of the following methods may come at the expense of extra I/O operations.  This is especially true for JavaSeis datasets that are of 6 or more dimensions.
 
 
 **Reading:**
 
 
 ```julia
-trcs, hdrs = read(io, 1:10, 2:3, 4)           # read from 3D data (frame 4, traces 2-3, and time samples 1-10)
-trcs, hdrs = read(io, 1:10, 2:3, 4, :)        # read from 4D data (all volumes, frame 4, traces 2-3, and time samples 1-10)
-trcs, hdrs = read(io, 1:10, 2:3, 4, :, 2:2:4) # read from 5D data (Hypercubes 2 and 4, all volumes, frame 4, traces 2-3 and time samples 1-10)
-read!(io, trcs, hdrs, 1:10, 2:3, 4)           # in-place read from 3D data
-read!(io, trcs, hdrs, 1:10, 2:3, 4, :)        # in-place read from 4D data
-read!(io, trcs, hdrs, 1:10, 2:3, 4, :, 2:2:4) # in-place read from 5D data
+trcs, hdrs = read(io, 1:10, 2:3, 4)              # read from 3D data (frame 4, traces 2-3, and time samples 1-10)
+trcs, hdrs = read(io, 1:10, 2:3, 4, :)           # read from 4D data (all volumes, frame 4, traces 2-3, and time samples 1-10)
+trcs, hdrs = read(io, 1:10, 2:3, 4, :, 2:2:4)    # read from 5D data (Hypercubes 2 and 4, all volumes, frame 4, traces 2-3 and time samples 1-10)
+trcs, hdrs = read(io, 1:10, 2:3, 4, :, 2:2:4, 1) # read from 6D data (element 1 from the 6th dimension, hypercubes 2 and 4, all volumnes, frame 4, traces 2-3 and time samples 1-10)
+...
+read!(io, trcs, hdrs, 1:10, 2:3, 4)              # in-place read from 3D data
+read!(io, trcs, hdrs, 1:10, 2:3, 4, :)           # in-place read from 4D data
+read!(io, trcs, hdrs, 1:10, 2:3, 4, :, 2:2:4)    # in-place read from 5D data
+read!(io, trcs, hdrs, 1:10, 2:3, 4, :, 2:2:4, 1) # in-place read from 6D data
+...
 ```
 
 
@@ -542,7 +560,7 @@ and only headers (for example):
 
 ```julia
 hdrs = readhdrs(io, 2:3, 4)
-readhdrs!(io, hdrs, 2:3, 4) # in-place version of previous line
+readhdrs!(io, hdrs, 2:3, 4) # in-place version of previous line//
 ```
 
 
@@ -573,9 +591,11 @@ The first set of API is for writing one frame at a time:
 
 
 ```julia
-writeframe(io, trcs, ifrm)             # write to 3D data
-writeframe(io, trcs, ifrm, ivol)       # write to 4D data
-writeframe(io, trcs, ifrm, ivol, ihyp) # write to 5D data
+writeframe(io, trcs, ifrm)                 # write to 3D data
+writeframe(io, trcs, ifrm, ivol)           # write to 4D data
+writeframe(io, trcs, ifrm, ivol, ihyp)     # write to 5D data
+writeframe(io, trcs, ifrm, ivol, ihyp, i6) # write to 6D data
+...
 ```
 
 
@@ -583,9 +603,11 @@ The second set of API is for writing arbitrary N-dimensional slices of data:
 
 
 ```julia
-write(io, trcs, :, 1:10, 3:2:5)       # write to 3D data, all samples; traces 1-10; frames 3, 5
-write(io, trcs, :, 1:10, 3:2:5, 6)    # write to 4D data, all samples; traces 1-10; frames 3, 5; volume 6
-write(io, trcs, :, 1:10, 3:2:5, 6, :) # write to 5D data, all samples; traces 1-10; frames 3, 5; volume 6, all hypercubes
+write(io, trcs, :, 1:10, 3:2:5)            # write to 3D data, all samples; traces 1-10; frames 3, 5
+write(io, trcs, :, 1:10, 3:2:5, 6)         # write to 4D data, all samples; traces 1-10; frames 3, 5; volume 6
+write(io, trcs, :, 1:10, 3:2:5, 6, :)      # write to 5D data, all samples; traces 1-10; frames 3, 5; volume 6, all hypercubes
+write(io, trcs, :, 1:10, 3:2:5, 6, :, 1:2) # write to 6D data, all samples; traces 1-10; frames 3, 5; volume 6, all hypercubes, elements 1 and 2 from dimension 6
+...
 ```
 
 
@@ -802,8 +824,8 @@ copy!(io, hdrs, io1, hdrs1) # copy values from `hdrs1::Array{UInt8,2}` to `hdrs:
 - [`Base.close`](README.md#Base.close-Tuple{TeaSeis.JSeis})
 - [`Base.copy!`](README.md#Base.copy!-Tuple{TeaSeis.JSeis,AbstractArray{UInt8,2},TeaSeis.JSeis,AbstractArray{UInt8,2}})
 - [`Base.empty!`](README.md#Base.empty!-Tuple{TeaSeis.JSeis})
-- [`Base.get`](README.md#Base.get-Tuple{TeaSeis.TraceProperty{T<:Number},Array{UInt8,1}})
 - [`Base.get`](README.md#Base.get-Tuple{TeaSeis.TraceProperty,AbstractArray{UInt8,2},Int64})
+- [`Base.get`](README.md#Base.get-Tuple{TeaSeis.TraceProperty{T<:Number},Array{UInt8,1}})
 - [`Base.in`](README.md#Base.in-Tuple{Union{String,TeaSeis.TracePropertyDef,TeaSeis.TraceProperty},TeaSeis.JSeis})
 - [`Base.ind2sub`](README.md#Base.ind2sub-Tuple{TeaSeis.JSeis,Int64})
 - [`Base.isempty`](README.md#Base.isempty-Tuple{TeaSeis.JSeis})
@@ -811,30 +833,30 @@ copy!(io, hdrs, io1, hdrs1) # copy values from `hdrs1::Array{UInt8,2}` to `hdrs:
 - [`Base.ndims`](README.md#Base.ndims-Tuple{TeaSeis.JSeis})
 - [`Base.read`](README.md#Base.read-Tuple{TeaSeis.JSeis,Union{Colon,Int64,Range{Int64}},Union{Colon,Int64,Range{Int64}},Vararg{Union{Colon,Int64,Range{Int64}},N}})
 - [`Base.read!`](README.md#Base.read!-Tuple{TeaSeis.JSeis,AbstractArray{Float32,N},AbstractArray{UInt8,N},Union{Colon,Int64,Range{Int64}},Union{Colon,Int64,Range{Int64}},Vararg{Union{Colon,Int64,Range{Int64}},N}})
-- [`Base.size`](README.md#Base.size-Tuple{TeaSeis.JSeis,Int64})
 - [`Base.size`](README.md#Base.size-Tuple{TeaSeis.JSeis})
-- [`Base.write`](README.md#Base.write)
+- [`Base.size`](README.md#Base.size-Tuple{TeaSeis.JSeis,Int64})
 - [`Base.write`](README.md#Base.write-Tuple{TeaSeis.JSeis,AbstractArray{Float32,N},Union{Colon,Int64,Range{Int64}},Union{Colon,Int64,Range{Int64}},Vararg{Union{Colon,Int64,Range{Int64}},N}})
+- [`Base.write`](README.md#Base.write)
 - [`TeaSeis.allocframe`](README.md#TeaSeis.allocframe-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.allocframehdrs`](README.md#TeaSeis.allocframehdrs-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.allocframetrcs`](README.md#TeaSeis.allocframetrcs-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.dataproperty`](README.md#TeaSeis.dataproperty-Tuple{TeaSeis.JSeis,String})
-- [`TeaSeis.domains`](README.md#TeaSeis.domains-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.domains`](README.md#TeaSeis.domains-Tuple{TeaSeis.JSeis,Int64})
+- [`TeaSeis.domains`](README.md#TeaSeis.domains-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.fold`](README.md#TeaSeis.fold-Tuple{TeaSeis.JSeis,Array{UInt8,2}})
 - [`TeaSeis.fold`](README.md#TeaSeis.fold-Tuple{TeaSeis.JSeis,Vararg{Int64,N}})
 - [`TeaSeis.jscreate`](README.md#TeaSeis.jscreate-Tuple{String})
-- [`TeaSeis.jsopen`](README.md#TeaSeis.jsopen-Tuple{String,String})
 - [`TeaSeis.jsopen`](README.md#TeaSeis.jsopen-Tuple{String})
+- [`TeaSeis.jsopen`](README.md#TeaSeis.jsopen-Tuple{String,String})
 - [`TeaSeis.labels`](README.md#TeaSeis.labels-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.labels`](README.md#TeaSeis.labels-Tuple{TeaSeis.JSeis,Int64})
 - [`TeaSeis.leftjustify!`](README.md#TeaSeis.leftjustify!-Tuple{TeaSeis.JSeis,Array{Float32,2},Array{UInt8,2}})
-- [`TeaSeis.lincs`](README.md#TeaSeis.lincs-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.lincs`](README.md#TeaSeis.lincs-Tuple{TeaSeis.JSeis,Int64})
+- [`TeaSeis.lincs`](README.md#TeaSeis.lincs-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.lrange`](README.md#TeaSeis.lrange-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.lrange`](README.md#TeaSeis.lrange-Tuple{TeaSeis.JSeis,Int64})
-- [`TeaSeis.lstarts`](README.md#TeaSeis.lstarts-Tuple{TeaSeis.JSeis,Int64})
 - [`TeaSeis.lstarts`](README.md#TeaSeis.lstarts-Tuple{TeaSeis.JSeis})
+- [`TeaSeis.lstarts`](README.md#TeaSeis.lstarts-Tuple{TeaSeis.JSeis,Int64})
 - [`TeaSeis.pincs`](README.md#TeaSeis.pincs-Tuple{TeaSeis.JSeis,Int64})
 - [`TeaSeis.pincs`](README.md#TeaSeis.pincs-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.prop`](README.md#TeaSeis.prop-Tuple{TeaSeis.JSeis,String})
@@ -842,8 +864,8 @@ copy!(io, hdrs, io1, hdrs1) # copy values from `hdrs1::Array{UInt8,2}` to `hdrs:
 - [`TeaSeis.propdefs`](README.md#TeaSeis.propdefs-Tuple{TeaSeis.JSeis,Int64})
 - [`TeaSeis.props`](README.md#TeaSeis.props-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.props`](README.md#TeaSeis.props-Tuple{TeaSeis.JSeis,Int64})
-- [`TeaSeis.pstarts`](README.md#TeaSeis.pstarts-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.pstarts`](README.md#TeaSeis.pstarts-Tuple{TeaSeis.JSeis,Int64})
+- [`TeaSeis.pstarts`](README.md#TeaSeis.pstarts-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.readframe`](README.md#TeaSeis.readframe-Tuple{TeaSeis.JSeis,Vararg{Int64,N}})
 - [`TeaSeis.readframe!`](README.md#TeaSeis.readframe!-Tuple{TeaSeis.JSeis,AbstractArray{Float32,2},AbstractArray{UInt8,2},Vararg{Int64,N}})
 - [`TeaSeis.readframehdrs`](README.md#TeaSeis.readframehdrs-Tuple{TeaSeis.JSeis,Vararg{Int64,N}})
@@ -856,8 +878,8 @@ copy!(io, hdrs, io1, hdrs1) # copy values from `hdrs1::Array{UInt8,2}` to `hdrs:
 - [`TeaSeis.readtrcs!`](README.md#TeaSeis.readtrcs!-Tuple{TeaSeis.JSeis,AbstractArray{Float32,N},Union{Colon,Int64,Range{Int64}},Union{Colon,Int64,Range{Int64}},Vararg{Union{Colon,Int64,Range{Int64}},N}})
 - [`TeaSeis.regularize!`](README.md#TeaSeis.regularize!-Tuple{TeaSeis.JSeis,Array{Float32,2},Array{UInt8,2}})
 - [`TeaSeis.set!`](README.md#TeaSeis.set!-Tuple{TeaSeis.TraceProperty,AbstractArray{UInt8,2},Int64,T<:Number})
-- [`TeaSeis.units`](README.md#TeaSeis.units-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.units`](README.md#TeaSeis.units-Tuple{TeaSeis.JSeis,Int64})
+- [`TeaSeis.units`](README.md#TeaSeis.units-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.writeframe`](README.md#TeaSeis.writeframe-Tuple{TeaSeis.JSeis,AbstractArray{Float32,2},AbstractArray{UInt8,2},Int64})
 - [`TeaSeis.writeframe`](README.md#TeaSeis.writeframe-Tuple{TeaSeis.JSeis,AbstractArray{Float32,2},Vararg{Int64,N}})
 

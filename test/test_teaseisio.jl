@@ -4,7 +4,8 @@ ENV["JAVASEIS_DATA_HOME"] = ""
 ENV["PROMAX_DATA_HOME"] = ""
 
 rundir = "./tmp"
-mkdir("./tmp")
+rm(rundir, recursive=true,force=true)
+mkdir(rundir)
 @testset "teaseisio Tests" begin
     # issue with tracetype of number other than 1 or 2.
     # The new expectation is that the leftjustify! method considers TRC_TYPE = 1 to be live
@@ -588,5 +589,37 @@ mkdir("./tmp")
         empty!(io)
         @test isempty(io) == true
         rm(io)
+    end
+end
+
+@testset "teaseisio, 6 dimensions" begin
+    io = jsopen("test.js", "w", axis_lengths=[2,3,4,5,6,7])
+    x = rand(Float32,2,3,4,5,6,7)
+    for i = 1:length(io)
+        writeframe(io, x[:,:,ind2sub(io,i)...], ind2sub(io,i)...)
+    end
+    close(io)
+    io = jsopen("test.js")
+    @test size(io) == (2,3,4,5,6,7)
+    for i = 1:length(io)
+        t,h = readframe(io, ind2sub(io,i)...)
+        @test t ≈ x[:,:,ind2sub(io,i)...]
+        @test get(prop(io,"DIM6"), h, 1) == ind2sub(io,i)[4]
+    end
+end
+
+@testset "teaseisio, 9 dimensions" begin
+    io = jsopen("test.js", "w", axis_lengths=[2,3,4,5,6,7,2,1,2])
+    x = rand(Float32,2,3,4,5,6,7,2,1,2)
+    for i = 1:length(io)
+        writeframe(io, x[:,:,ind2sub(io,i)...], ind2sub(io,i)...)
+    end
+    close(io)
+    io = jsopen("test.js")
+    @test size(io) == (2,3,4,5,6,7,2,1,2)
+    for i = 1:length(io)
+        t,h = readframe(io, ind2sub(io,i)...)
+        @test t ≈ x[:,:,ind2sub(io,i)...]
+        @test get(prop(io,"DIM9"), h, 1) == ind2sub(io,i)[7]
     end
 end
