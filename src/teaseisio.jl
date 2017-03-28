@@ -1194,6 +1194,20 @@ function dataproperty(io::JSeis, label::String)
     error("data property -- $(label) -- not found.")
 end
 
+"""
+    hasdataproperty(io, label)
+
+return true if `io::JSeis` contains the data property corresponding to `label`.  Otherwise, return false.
+"""
+function hasdataproperty(io, label)
+    for dataprop in io.dataproperties
+        if dataprop.label == label
+            return true
+        end
+    end
+    return false
+end
+
 # memory allocation
 """
     allocframe(io)

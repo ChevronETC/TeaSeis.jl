@@ -772,33 +772,34 @@ Several convenience methods are supplied for querying `io::JSeis`:
 
 
 ```julia
-ndims(io)            # returns `Int`, number of dimensions in the JavaSeis dataset
-length(io)           # returns `Int`, the number of frames in the JavaSeis dataset, equivalent to `prod(size(io)[3:end])`
-size(io)             # returns `NTuple{Int}`, size of JavaSeis dataset
-size(io,i)           # returns `Int`, size of JavaSeis dataset along dimension `i::Int`
-props(io)            # returns `NTuple{TraceProperty}`, trace property along all dimensions
-props(io,i)          # returns `TraceProperty`, trace property along dimension `i::Int`
-propdefs(io)         # returns `NTuple{TracePropertyDef}`, trace property definition along all dimensions
-propdefs(io,i)       # returns `TracePropertyDef`, trace property along dimension `i::Int`
-labels(io)           # returns `NTuple{String}`, trace property labels along all dimensions
-labels(io,i)         # returns `String`, trace property label along dimension `i::Int`
-units(io)            # returns `NTuple{String}`, units along all dimensions
-units(io,i)          # returns `String, unit along dimension `i::Int`
-domains(io)          # returns `NTuple{String}`, data domains along all dimensions
-domains(io,i)        # returns `String`, data domain along dimension `i::Int`
-pstarts(io)          # returns `NTuple{Float64}`, physical starts along all dimensions
-pstarts(io,i)        # returns `Float64`, physical start along dimension `i::Int`
-pincs(io)            # returns `NTuple{Float64}`, physical increments along all dimensions
-pincs(io,i)          # returns `Float64`, physical increment along dimension `i::Int`
-lstarts(io)          # returns `NTuple{Int32}`, logical starts along all dimensions
-lstarts(io,i)        # returns `Int32`, logical start along dimension `i::Int`
-lincs(io)            # returns `NTuple{Int32}`, logical increments along all dimensions
-lincs(io,i)          # returns `Int32`, logical increment along dimension `i::Int`
-lrange(io)           # returns `NTuple{StepRange{Int64}}`, logical range along all dimensions
-lrange(io,i)         # returns `StepRange{Int64}`, logical range along dimension `i::Int`
-isempty(io)          # returns true if the dataset is empty (without trace or header extents)
-in(prop,io)          # returns true if the trace property `prop` exists in `io` --  `prop` can be of types `::TraceProperty`, `::TracePropertyDef`, or `::String`
-dataproperty(io,nm)  # returns the value held in the data property: `nm::String`
+ndims(io)              # returns `Int`, number of dimensions in the JavaSeis dataset
+length(io)             # returns `Int`, the number of frames in the JavaSeis dataset, equivalent to `prod(size(io)[3:end])`
+size(io)               # returns `NTuple{Int}`, size of JavaSeis dataset
+size(io,i)             # returns `Int`, size of JavaSeis dataset along dimension `i::Int`
+props(io)              # returns `NTuple{TraceProperty}`, trace property along all dimensions
+props(io,i)            # returns `TraceProperty`, trace property along dimension `i::Int`
+propdefs(io)           # returns `NTuple{TracePropertyDef}`, trace property definition along all dimensions
+propdefs(io,i)         # returns `TracePropertyDef`, trace property along dimension `i::Int`
+labels(io)             # returns `NTuple{String}`, trace property labels along all dimensions
+labels(io,i)           # returns `String`, trace property label along dimension `i::Int`
+units(io)              # returns `NTuple{String}`, units along all dimensions
+units(io,i)            # returns `String, unit along dimension `i::Int`
+domains(io)            # returns `NTuple{String}`, data domains along all dimensions
+domains(io,i)          # returns `String`, data domain along dimension `i::Int`
+pstarts(io)            # returns `NTuple{Float64}`, physical starts along all dimensions
+pstarts(io,i)          # returns `Float64`, physical start along dimension `i::Int`
+pincs(io)              # returns `NTuple{Float64}`, physical increments along all dimensions
+pincs(io,i)            # returns `Float64`, physical increment along dimension `i::Int`
+lstarts(io)            # returns `NTuple{Int32}`, logical starts along all dimensions
+lstarts(io,i)          # returns `Int32`, logical start along dimension `i::Int`
+lincs(io)              # returns `NTuple{Int32}`, logical increments along all dimensions
+lincs(io,i)            # returns `Int32`, logical increment along dimension `i::Int`
+lrange(io)             # returns `NTuple{StepRange{Int64}}`, logical range along all dimensions
+lrange(io,i)           # returns `StepRange{Int64}`, logical range along dimension `i::Int`
+isempty(io)            # returns true if the dataset is empty (without trace or header extents)
+in(prop,io)            # returns true if the trace property `prop` exists in `io` --  `prop` can be of types `::TraceProperty`, `::TracePropertyDef`, or `::String`
+dataproperty(io,nm)    # returns the value held in the data property: `nm::String`
+hasdataproperty(io,nm) # returns true if the data property corresponding to label `nm::String` is in `io::JSeis`
 ```
 
 
@@ -824,8 +825,8 @@ copy!(io, hdrs, io1, hdrs1) # copy values from `hdrs1::Array{UInt8,2}` to `hdrs:
 - [`Base.close`](README.md#Base.close-Tuple{TeaSeis.JSeis})
 - [`Base.copy!`](README.md#Base.copy!-Tuple{TeaSeis.JSeis,AbstractArray{UInt8,2},TeaSeis.JSeis,AbstractArray{UInt8,2}})
 - [`Base.empty!`](README.md#Base.empty!-Tuple{TeaSeis.JSeis})
-- [`Base.get`](README.md#Base.get-Tuple{TeaSeis.TraceProperty,AbstractArray{UInt8,2},Int64})
 - [`Base.get`](README.md#Base.get-Tuple{TeaSeis.TraceProperty{T<:Number},Array{UInt8,1}})
+- [`Base.get`](README.md#Base.get-Tuple{TeaSeis.TraceProperty,AbstractArray{UInt8,2},Int64})
 - [`Base.in`](README.md#Base.in-Tuple{Union{String,TeaSeis.TracePropertyDef,TeaSeis.TraceProperty},TeaSeis.JSeis})
 - [`Base.ind2sub`](README.md#Base.ind2sub-Tuple{TeaSeis.JSeis,Int64})
 - [`Base.isempty`](README.md#Base.isempty-Tuple{TeaSeis.JSeis})
@@ -835,8 +836,8 @@ copy!(io, hdrs, io1, hdrs1) # copy values from `hdrs1::Array{UInt8,2}` to `hdrs:
 - [`Base.read!`](README.md#Base.read!-Tuple{TeaSeis.JSeis,AbstractArray{Float32,N},AbstractArray{UInt8,N},Union{Colon,Int64,Range{Int64}},Union{Colon,Int64,Range{Int64}},Vararg{Union{Colon,Int64,Range{Int64}},N}})
 - [`Base.size`](README.md#Base.size-Tuple{TeaSeis.JSeis})
 - [`Base.size`](README.md#Base.size-Tuple{TeaSeis.JSeis,Int64})
-- [`Base.write`](README.md#Base.write-Tuple{TeaSeis.JSeis,AbstractArray{Float32,N},Union{Colon,Int64,Range{Int64}},Union{Colon,Int64,Range{Int64}},Vararg{Union{Colon,Int64,Range{Int64}},N}})
 - [`Base.write`](README.md#Base.write)
+- [`Base.write`](README.md#Base.write-Tuple{TeaSeis.JSeis,AbstractArray{Float32,N},Union{Colon,Int64,Range{Int64}},Union{Colon,Int64,Range{Int64}},Vararg{Union{Colon,Int64,Range{Int64}},N}})
 - [`TeaSeis.allocframe`](README.md#TeaSeis.allocframe-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.allocframehdrs`](README.md#TeaSeis.allocframehdrs-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.allocframetrcs`](README.md#TeaSeis.allocframetrcs-Tuple{TeaSeis.JSeis})
@@ -845,25 +846,26 @@ copy!(io, hdrs, io1, hdrs1) # copy values from `hdrs1::Array{UInt8,2}` to `hdrs:
 - [`TeaSeis.domains`](README.md#TeaSeis.domains-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.fold`](README.md#TeaSeis.fold-Tuple{TeaSeis.JSeis,Array{UInt8,2}})
 - [`TeaSeis.fold`](README.md#TeaSeis.fold-Tuple{TeaSeis.JSeis,Vararg{Int64,N}})
+- [`TeaSeis.hasdataproperty`](README.md#TeaSeis.hasdataproperty-Tuple{Any,Any})
 - [`TeaSeis.jscreate`](README.md#TeaSeis.jscreate-Tuple{String})
-- [`TeaSeis.jsopen`](README.md#TeaSeis.jsopen-Tuple{String})
 - [`TeaSeis.jsopen`](README.md#TeaSeis.jsopen-Tuple{String,String})
+- [`TeaSeis.jsopen`](README.md#TeaSeis.jsopen-Tuple{String})
 - [`TeaSeis.labels`](README.md#TeaSeis.labels-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.labels`](README.md#TeaSeis.labels-Tuple{TeaSeis.JSeis,Int64})
 - [`TeaSeis.leftjustify!`](README.md#TeaSeis.leftjustify!-Tuple{TeaSeis.JSeis,Array{Float32,2},Array{UInt8,2}})
 - [`TeaSeis.lincs`](README.md#TeaSeis.lincs-Tuple{TeaSeis.JSeis,Int64})
 - [`TeaSeis.lincs`](README.md#TeaSeis.lincs-Tuple{TeaSeis.JSeis})
-- [`TeaSeis.lrange`](README.md#TeaSeis.lrange-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.lrange`](README.md#TeaSeis.lrange-Tuple{TeaSeis.JSeis,Int64})
-- [`TeaSeis.lstarts`](README.md#TeaSeis.lstarts-Tuple{TeaSeis.JSeis})
+- [`TeaSeis.lrange`](README.md#TeaSeis.lrange-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.lstarts`](README.md#TeaSeis.lstarts-Tuple{TeaSeis.JSeis,Int64})
-- [`TeaSeis.pincs`](README.md#TeaSeis.pincs-Tuple{TeaSeis.JSeis,Int64})
+- [`TeaSeis.lstarts`](README.md#TeaSeis.lstarts-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.pincs`](README.md#TeaSeis.pincs-Tuple{TeaSeis.JSeis})
+- [`TeaSeis.pincs`](README.md#TeaSeis.pincs-Tuple{TeaSeis.JSeis,Int64})
 - [`TeaSeis.prop`](README.md#TeaSeis.prop-Tuple{TeaSeis.JSeis,String})
-- [`TeaSeis.propdefs`](README.md#TeaSeis.propdefs-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.propdefs`](README.md#TeaSeis.propdefs-Tuple{TeaSeis.JSeis,Int64})
-- [`TeaSeis.props`](README.md#TeaSeis.props-Tuple{TeaSeis.JSeis})
+- [`TeaSeis.propdefs`](README.md#TeaSeis.propdefs-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.props`](README.md#TeaSeis.props-Tuple{TeaSeis.JSeis,Int64})
+- [`TeaSeis.props`](README.md#TeaSeis.props-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.pstarts`](README.md#TeaSeis.pstarts-Tuple{TeaSeis.JSeis,Int64})
 - [`TeaSeis.pstarts`](README.md#TeaSeis.pstarts-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.readframe`](README.md#TeaSeis.readframe-Tuple{TeaSeis.JSeis,Vararg{Int64,N}})
@@ -878,8 +880,8 @@ copy!(io, hdrs, io1, hdrs1) # copy values from `hdrs1::Array{UInt8,2}` to `hdrs:
 - [`TeaSeis.readtrcs!`](README.md#TeaSeis.readtrcs!-Tuple{TeaSeis.JSeis,AbstractArray{Float32,N},Union{Colon,Int64,Range{Int64}},Union{Colon,Int64,Range{Int64}},Vararg{Union{Colon,Int64,Range{Int64}},N}})
 - [`TeaSeis.regularize!`](README.md#TeaSeis.regularize!-Tuple{TeaSeis.JSeis,Array{Float32,2},Array{UInt8,2}})
 - [`TeaSeis.set!`](README.md#TeaSeis.set!-Tuple{TeaSeis.TraceProperty,AbstractArray{UInt8,2},Int64,T<:Number})
-- [`TeaSeis.units`](README.md#TeaSeis.units-Tuple{TeaSeis.JSeis,Int64})
 - [`TeaSeis.units`](README.md#TeaSeis.units-Tuple{TeaSeis.JSeis})
+- [`TeaSeis.units`](README.md#TeaSeis.units-Tuple{TeaSeis.JSeis,Int64})
 - [`TeaSeis.writeframe`](README.md#TeaSeis.writeframe-Tuple{TeaSeis.JSeis,AbstractArray{Float32,2},AbstractArray{UInt8,2},Int64})
 - [`TeaSeis.writeframe`](README.md#TeaSeis.writeframe-Tuple{TeaSeis.JSeis,AbstractArray{Float32,2},Vararg{Int64,N}})
 
@@ -966,6 +968,17 @@ fold(io, idx...)
 ```
 
 Compute the fold of a frame where idx is the frame/volume/hypercube indices.  For example, `fold(jsopen("file.js"),1)` for a 3D dataset, `fold(jsopen("file.js",1,2))` for a 4D dataset, and `fold(jsopen("file.js"),1,2,3)` for a 5D dataset.
+
+<a id='TeaSeis.hasdataproperty-Tuple{Any,Any}' href='#TeaSeis.hasdataproperty-Tuple{Any,Any}'>#</a>
+**`TeaSeis.hasdataproperty`** &mdash; *Method*.
+
+
+
+```
+hasdataproperty(io, label)
+```
+
+return true if `io::JSeis` contains the data property corresponding to `label`.  Otherwise, return false.
 
 <a id='TeaSeis.jscreate-Tuple{String}' href='#TeaSeis.jscreate-Tuple{String}'>#</a>
 **`TeaSeis.jscreate`** &mdash; *Method*.

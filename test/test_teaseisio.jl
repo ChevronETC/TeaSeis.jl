@@ -623,3 +623,11 @@ end
         @test get(prop(io,"DIM9"), h, 1) == ind2sub(io,i)[7]
     end
 end
+
+@testset "teaseisio, data property" begin
+    io = jsopen("test.js", "w", axis_lengths=[2,3,4], dataproperties=[DataProperty("PROP", Int32, 10)])
+    io = jsopen("test.js")
+    @test hasdataproperty(io,"PROP") == true
+    @test hasdataproperty(io, "NOPROP") == false
+    @test dataproperty(io,"PROP") == 10
+end

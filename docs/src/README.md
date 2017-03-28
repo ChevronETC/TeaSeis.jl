@@ -453,33 +453,34 @@ io = jsopen("file.js", "w", axis_lengths=[12,11,10], axis_units=[stockunit[:SECO
 
 Several convenience methods are supplied for querying `io::JSeis`:
 ```julia
-ndims(io)            # returns `Int`, number of dimensions in the JavaSeis dataset
-length(io)           # returns `Int`, the number of frames in the JavaSeis dataset, equivalent to `prod(size(io)[3:end])`
-size(io)             # returns `NTuple{Int}`, size of JavaSeis dataset
-size(io,i)           # returns `Int`, size of JavaSeis dataset along dimension `i::Int`
-props(io)            # returns `NTuple{TraceProperty}`, trace property along all dimensions
-props(io,i)          # returns `TraceProperty`, trace property along dimension `i::Int`
-propdefs(io)         # returns `NTuple{TracePropertyDef}`, trace property definition along all dimensions
-propdefs(io,i)       # returns `TracePropertyDef`, trace property along dimension `i::Int`
-labels(io)           # returns `NTuple{String}`, trace property labels along all dimensions
-labels(io,i)         # returns `String`, trace property label along dimension `i::Int`
-units(io)            # returns `NTuple{String}`, units along all dimensions
-units(io,i)          # returns `String, unit along dimension `i::Int`
-domains(io)          # returns `NTuple{String}`, data domains along all dimensions
-domains(io,i)        # returns `String`, data domain along dimension `i::Int`
-pstarts(io)          # returns `NTuple{Float64}`, physical starts along all dimensions
-pstarts(io,i)        # returns `Float64`, physical start along dimension `i::Int`
-pincs(io)            # returns `NTuple{Float64}`, physical increments along all dimensions
-pincs(io,i)          # returns `Float64`, physical increment along dimension `i::Int`
-lstarts(io)          # returns `NTuple{Int32}`, logical starts along all dimensions
-lstarts(io,i)        # returns `Int32`, logical start along dimension `i::Int`
-lincs(io)            # returns `NTuple{Int32}`, logical increments along all dimensions
-lincs(io,i)          # returns `Int32`, logical increment along dimension `i::Int`
-lrange(io)           # returns `NTuple{StepRange{Int64}}`, logical range along all dimensions
-lrange(io,i)         # returns `StepRange{Int64}`, logical range along dimension `i::Int`
-isempty(io)          # returns true if the dataset is empty (without trace or header extents)
-in(prop,io)          # returns true if the trace property `prop` exists in `io` --  `prop` can be of types `::TraceProperty`, `::TracePropertyDef`, or `::String`
-dataproperty(io,nm)  # returns the value held in the data property: `nm::String`
+ndims(io)              # returns `Int`, number of dimensions in the JavaSeis dataset
+length(io)             # returns `Int`, the number of frames in the JavaSeis dataset, equivalent to `prod(size(io)[3:end])`
+size(io)               # returns `NTuple{Int}`, size of JavaSeis dataset
+size(io,i)             # returns `Int`, size of JavaSeis dataset along dimension `i::Int`
+props(io)              # returns `NTuple{TraceProperty}`, trace property along all dimensions
+props(io,i)            # returns `TraceProperty`, trace property along dimension `i::Int`
+propdefs(io)           # returns `NTuple{TracePropertyDef}`, trace property definition along all dimensions
+propdefs(io,i)         # returns `TracePropertyDef`, trace property along dimension `i::Int`
+labels(io)             # returns `NTuple{String}`, trace property labels along all dimensions
+labels(io,i)           # returns `String`, trace property label along dimension `i::Int`
+units(io)              # returns `NTuple{String}`, units along all dimensions
+units(io,i)            # returns `String, unit along dimension `i::Int`
+domains(io)            # returns `NTuple{String}`, data domains along all dimensions
+domains(io,i)          # returns `String`, data domain along dimension `i::Int`
+pstarts(io)            # returns `NTuple{Float64}`, physical starts along all dimensions
+pstarts(io,i)          # returns `Float64`, physical start along dimension `i::Int`
+pincs(io)              # returns `NTuple{Float64}`, physical increments along all dimensions
+pincs(io,i)            # returns `Float64`, physical increment along dimension `i::Int`
+lstarts(io)            # returns `NTuple{Int32}`, logical starts along all dimensions
+lstarts(io,i)          # returns `Int32`, logical start along dimension `i::Int`
+lincs(io)              # returns `NTuple{Int32}`, logical increments along all dimensions
+lincs(io,i)            # returns `Int32`, logical increment along dimension `i::Int`
+lrange(io)             # returns `NTuple{StepRange{Int64}}`, logical range along all dimensions
+lrange(io,i)           # returns `StepRange{Int64}`, logical range along dimension `i::Int`
+isempty(io)            # returns true if the dataset is empty (without trace or header extents)
+in(prop,io)            # returns true if the trace property `prop` exists in `io` --  `prop` can be of types `::TraceProperty`, `::TracePropertyDef`, or `::String`
+dataproperty(io,nm)    # returns the value held in the data property: `nm::String`
+hasdataproperty(io,nm) # returns true if the data property corresponding to label `nm::String` is in `io::JSeis`
 ```
 Convenience methods are supplied for manipulating `io::JSeis`:
 ```julia
