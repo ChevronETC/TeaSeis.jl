@@ -95,11 +95,11 @@ function jsopen(
     io.currentvolume = -1
 
     if mode == "r" || mode == "r+"
-        io2 = open("$(filename)/Name.properties", "r")
+        io2 = open(joinpath(filename, "Name.properties"), "r")
         io.description = get_description(io2)
         close(io2)
 
-        xml = parse_file("$(filename)/FileProperties.xml")
+        xml = parse_file(joinpath(filename, "FileProperties.xml"))
         io.mapped         = get_mapped(xml)
         io.datatype       = get_datatype(xml)
         io.dataformat     = get_dataformat(xml)
@@ -117,19 +117,19 @@ function jsopen(
         io.geom           = get_geom(xml)
 
         io.hastraces = false
-        if isfile("$(filename)/Status.properties") == true # Do not fail if Status.properties does not exist to maintain backwards compat
-            io2 = open("$(filename)/Status.properties")
+        if isfile(joinpath(filename, "Status.properties")) == true # Do not fail if Status.properties does not exist to maintain backwards compat
+            io2 = open(joinpath(filename, "Status.properties"))
             io.hastraces = get_status(io2)
             close(io2)
         end
 
-        xml = parse_file("$(filename)/VirtualFolders.xml")
+        xml = parse_file(joinpath(filename, "VirtualFolders.xml"))
         io.secondaries = get_secondaries(xml)
 
-        xml = parse_file("$(filename)/TraceFile.xml")
+        xml = parse_file(joinpath(filename, "TraceFile.xml"))
         io.trcextents = get_extents(xml, io.secondaries, io.filename)
 
-        xml = parse_file("$(filename)/TraceHeaders.xml")
+        xml = parse_file(joinpath(filename, "TraceHeaders.xml"))
         io.hdrextents = get_extents(xml, io.secondaries, io.filename)
 
         io.currentvolume = -1
@@ -809,7 +809,7 @@ function asciidataformat(dataformat::Type)
 end
 
 function write_nameproperties(io::JSeis)
-    ioname = open("$(io.filename)/Name.properties", "w")
+    ioname = open(joinpath(io.filename,"Name.properties"), "w")
     write(ioname,
 "#JavaSeis.jl - JavaSeis File Properties 2006.3
 #$(datestamp())
@@ -818,7 +818,7 @@ DescriptiveName=$(io.description)")
 end
 
 function write_statusproperties(io::JSeis)
-    iostatus = open("$(io.filename)/Status.properties", "w")
+    iostatus = open(joinpath(io.filename, "Status.properties"), "w")
     write(iostatus,
 "#JavaSeis.jl - JavaSeis File Properties 2006.3
 #$(datestamp())
@@ -849,8 +849,8 @@ function write_extentmanager(io::JSeis)
     write_parproperty(extentman, "VFIO_EXTNAME", "string", " TraceFile ")
     write_parproperty(extentman, "VFIO_POLICY",  "string", " RANDOM ")
 
-    save_file(xdoc, "$(io.filename)/TraceFile.xml")
-    delete_first_line("$(io.filename)/TraceFile.xml")
+    save_file(xdoc, joinpath(io.filename, "TraceFile.xml"))
+    delete_first_line(joinpath(io.filename, "TraceFile.xml"))
 
     xdoc = XMLDocument()
     extentman = create_root(xdoc, "parset")
@@ -862,8 +862,8 @@ function write_extentmanager(io::JSeis)
     write_parproperty(extentman, "VFIO_EXTNAME", "string", " TraceHeaders ")
     write_parproperty(extentman, "VFIO_POLICY",  "string", " RANDOM ")
 
-    save_file(xdoc, "$(io.filename)/TraceHeaders.xml")
-    delete_first_line("$(io.filename)/TraceHeaders.xml")
+    save_file(xdoc, joinpath(io.filename, "TraceHeaders.xml"))
+    delete_first_line(joinpath(io.filename, "TraceHeaders.xml"))
 end
 
 function write_virtualfolders(io::JSeis)
@@ -881,8 +881,8 @@ function write_virtualfolders(io::JSeis)
     write_parproperty(virtman, "POLICY_ID", "string", " RANDOM ")
     write_parproperty(virtman, "GLOBAL_REQUIRED_FREE_SPACE", "long",  " $(prod(io.axis_lengths[2:end]) * (io.axis_lengths[1] * sizeof(io.dataformat) + headerlength(io))) ")
 
-    save_file(xdoc, "$(io.filename)/VirtualFolders.xml")
-    delete_first_line("$(io.filename)/VirtualFolders.xml")
+    save_file(xdoc, joinpath(io.filename, "VirtualFolders.xml"))
+    delete_first_line(joinpath(io.filename, "VirtualFolders.xml"))
 end
 
 function write_parproperty(parent::XMLElement, name::String, format::String, value::String)
@@ -902,7 +902,7 @@ function readmap(io::JSeis, frm::Int64)
         return
     end
     posn = (vol - 1) * io.axis_lengths[3] * sizeof(Int32)
-    iomap = open("$(io.filename)/TraceMap", "r")
+    iomap = open(joinpath(io.filename, "TraceMap"), "r")
     seek(iomap, posn)
     read!(iomap, io.map)
     close(iomap)
@@ -910,7 +910,7 @@ function readmap(io::JSeis, frm::Int64)
 end
 
 function create_map(io::JSeis)
-    iomap = open("$(io.filename)/TraceMap", "w")
+    iomap = open(joinpath(io.filename, "TraceMap"), "w")
     write(iomap, zeros(Int32, prod(io.axis_lengths[3:end])))
     close(iomap)
 end
@@ -946,7 +946,7 @@ fold(io::JSeis, idx::Int64...) = fold_impl(io::JSeis, sub2ind(io, idx))
 function fold!(io::JSeis, frm::Int64, fld::Int)
     if io.mapped == true
         posn = (frm-1)*sizeof(Int32)
-        iomap = open("$(io.filename)/TraceMap", "a")
+        iomap = open(joinpath(io.filename, "TraceMap"), "a")
         seek(iomap, posn)
         write(iomap, Int32(fld))
         close(iomap)
@@ -958,17 +958,15 @@ extentindex(extents, offset) = extents[div(offset, extents[1].size) + 1]
 nextents_heuristic(dims::Array{Int64,1}, format::Type) = ceil(Int, clamp(10.0 + prod(dims)*sizeof(format)/(2.0*1024.0^3), 1, 256))
 
 function extentdir(secondary::String, filename::String)
-    isrelative = filename[1] != '/'
+    isrelative = isabspath(filename) == false
     datahome = haskey(ENV, "PROMAX_DATA_HOME") ? ENV["PROMAX_DATA_HOME"] : ""
     datahome = haskey(ENV, "JAVASEIS_DATA_HOME") ? ENV["JAVASEIS_DATA_HOME"] : datahome
-    if secondary == "." && isrelative == true
-        return "$(pwd())/$(filename)"
-    elseif secondary == "." &&  isrelative == false
-        return filename
+    if secondary == "."
+      return abspath(filename)
     elseif datahome != ""
-        filename = isrelative ? "$(pwd())/$(filename)" : filename
+        filename = abspath(filename)
         if contains(filename, datahome) == true
-            return normpath(replace(filename, datahome, "$(secondary)/"))
+            return normpath(replace(filename, datahome, is_windows() ? "$(secondary)//" : "$(secondary)/"))
         end
         if isrelative == true && startswith(pwd(),datahome) == false
             error("JAVASEIS_DATA_HOME or PROMAX_DATA_HOME is set, and JavaSeis filename is relative,
@@ -977,9 +975,9 @@ Either unset JAVASEIS_DATA_HOME and PROMAX_DATA_HOME, make your working director
         end
         error("JAVASEIS_DATA_HOME or PROMAX_DATA_HOME is set but does not seem correct: datahome=$(datahome), filename=$(filename)")
     elseif isrelative == true
-        return "$(secondary)/$(filename)"
+        return joinpath(secondary, filename)
     else
-        return "$(secondary)/$(filename[2:end])"
+        return joinpath(secondary, is_windows() ? filename[5:end] : filename[2:end])
     end
 end
 
@@ -996,7 +994,7 @@ function get_extents(xml::XMLDocument, secondaries::Array{String,1}, filename::S
                 i = parse(Int32,name[length(basename)+1:end]) + 1
                 if i <= nextents
                     start = (i - 1) * size
-                    path  = "$(base_extentpath)/$(name)"
+                    path  = joinpath(base_extentpath, name)
                     extents[i] = Extent(name, path, i, start, size)
                 end
             end
@@ -1009,7 +1007,7 @@ function get_extents(xml::XMLDocument, secondaries::Array{String,1}, filename::S
         if missing(extents[i]) == true
             start = (i - 1) * size
             name  = "$(basename)$(i-1)"
-            path  = "$(extentdir(secondaries[isec], filename))/$(name)"
+            path  = joinpath(extentdir(secondaries[isec], filename), name)
             extents[i] = Extent(name, path, i, start, size)
             isec = isec == nsec ? 1 : isec + 1
         end
@@ -1029,7 +1027,7 @@ function make_extents(nextents::Int, secondaries::Array{String,1}, filename::Str
     for i = 1:nextents
         extents[i] = Extent()
         extents[i].name = "$(basename)$(i-1)"
-        extents[i].path = "$(extentdir(secondaries[isec], filename))/$(basename)$(i-1)"
+        extents[i].path = joinpath(extentdir(secondaries[isec], filename), "$(basename)$(i-1)")
         extents[i].index = i-1
         extents[i].start = (i-1) * extent_size
         extents[i].size = min(extent_size, total_size)
