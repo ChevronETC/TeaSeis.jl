@@ -93,3 +93,6 @@ label(propdef::TracePropertyDef) = propdef.label
 description(propdef::TracePropertyDef) = propdef.description
 format(propdef::TracePropertyDef) = propdef.format
 elementcount(propdef::TracePropertyDef) = propdef.elementcount
+
+==(propdef1::TracePropertyDef, propdef2::TracePropertyDef) = propdef1.label == propdef2.label && propdef1.format == propdef2.format && propdef1.elementcount == propdef2.elementcount
+==(prop1::TraceProperty, prop2::TraceProperty) = prop1.def == prop2.def && prop1.byteoffset == prop2.byteoffset

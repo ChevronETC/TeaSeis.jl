@@ -230,7 +230,7 @@ function jsopen(
 
     if mode == "w"
         ndim = length(io.axis_lengths)
-        @assert 3 <= ndim <= 5
+        @assert ndim >= 3
         @assert length(io.axis_propdefs) == ndim || length(io.axis_propdefs) == 0
         @assert length(io.axis_units)    == ndim || length(io.axis_units)    == 0
         @assert length(io.axis_domains)  == ndim || length(io.axis_domains)  == 0
@@ -1190,6 +1190,20 @@ function dataproperty(io::JSeis, label::String)
         end
     end
     error("data property -- $(label) -- not found.")
+end
+
+"""
+    hasdataproperty(io, label)
+
+return true if `io::JSeis` contains the data property corresponding to `label`.  Otherwise, return false.
+"""
+function hasdataproperty(io, label)
+    for dataprop in io.dataproperties
+        if dataprop.label == label
+            return true
+        end
+    end
+    return false
 end
 
 # memory allocation

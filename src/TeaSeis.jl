@@ -5,6 +5,7 @@ module TeaSeis
 using LightXML
 
 import
+Base.==,
 Base.collect,
 Base.copy,
 Base.copy!,
@@ -41,6 +42,7 @@ DataProperty,
 JSeis,
 TracePropertyDef,
 dataproperty,
+hasdataproperty,
 jsopen,
 jscreate,
 labels,

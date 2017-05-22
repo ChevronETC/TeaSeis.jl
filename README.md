@@ -182,7 +182,7 @@ close(io)
 # jsopen / jscreate
 
 
-A JavaSeis dataset is created/opened with the `jsopen` method which returns a `JSeis`.
+A JavaSeis dataset is created/opened with the `jsopen` method which returns a `JSeis`. A JavaSeis dataset must have a minimum of 3 dimensions.  
 
 
 Create a 3D JavaSeis file with 10 samples per trace, 11 traces per frame, and 12 frames per volume:
@@ -395,13 +395,15 @@ hdrs = allocframehdrs(io)   # allocate memory for headers for a single frame
 ```
 
 
-Read a frame. `ifrm::Int`, `ivol::Int` and `ihyp::Int` must be consistent with the JavaSeis data context.
+Read a frame. `ifrm::Int`, `ivol::Int`, `ihyp::Int` and `i6::Int` must be consistent with the JavaSeis data context.
 
 
 ```julia
-trcs, hdrs = readframe(io, ifrm)             # read from 3D data
-trcs, hdrs = readframe(io, ifrm, ivol)       # read from 4D data
-trcs, hdrs = readframe(io, ifrm, ivol, ihyp) # read from 5D data
+trcs, hdrs = readframe(io, ifrm)                 # read from 3D data
+trcs, hdrs = readframe(io, ifrm, ivol)           # read from 4D data
+trcs, hdrs = readframe(io, ifrm, ivol, ihyp)     # read from 5D data
+trcs, hdrs = readframe(io, ifrm, ivol, ihyp, i6) # read from 6D data
+...
 ```
 
 
@@ -410,9 +412,11 @@ Read a frame (in-place) using pre-allocated memory:
 
 ```julia
 ifrm = 1
-readframe!(io, trcs, hdrs, ifrm)             # read from 3D data
-readframe!(io, trcs, hdrs, ifrm, ivol)       # read from 4D data
-readframe!(io, trcs, hdrs, ifrm, ivol, ihyp) # read from 5D data
+readframe!(io, trcs, hdrs, ifrm)                # read from 3D data
+readframe!(io, trcs, hdrs, ifrm, ivol)          # read from 4D data
+readframe!(io, trcs, hdrs, ifrm, ivol, ihyp)    # read from 5D data
+readframe!(io, trcs, hdrs, ifrm, ivol, ihyp, i6) # read from 6D data
+...
 ```
 
 
@@ -424,12 +428,16 @@ Similar methods exist for reading only headers:
 
 ```julia
 ifrm = 1
-hdrs = readframehdrs(io, ifrm)             # read from 3D data
-hdrs = readframehdrs(io, ifrm, ivol)       # read from 4D data
-hdrs = readframehdrs(io, ifrm, ivol, ihyp) # read from 5D data
-readframehdrs!(io, hdrs, ifrm)             # in-place read from 3D data
-readframehdrs!(io, hdrs, ifrm, ivol)       # in-place read from 4D data
-readframehdrs!(io, hdrs, ifrm, ivol, ihyp) # in-place read from 5D data
+hdrs = readframehdrs(io, ifrm)                 # read from 3D data
+hdrs = readframehdrs(io, ifrm, ivol)           # read from 4D data
+hdrs = readframehdrs(io, ifrm, ivol, ihyp)     # read from 5D data
+hdrs = readframehdrs(io, ifrm, ivol, ihyp, i6) # read from 6D data
+...
+readframehdrs!(io, hdrs, ifrm)                 # in-place read from 3D data
+readframehdrs!(io, hdrs, ifrm, ivol)           # in-place read from 4D data
+readframehdrs!(io, hdrs, ifrm, ivol, ihyp)     # in-place read from 5D data
+readframehdrs!(io, hdrs, ifrm, ivol, ihyp, i6) # in-place read from 6D data
+...
 ```
 
 
@@ -438,12 +446,16 @@ or only traces:
 
 ```julia
 ifrm = 1
-trcs = readframetrcs(io, ifrm)             # read from 3D data
-trcs = readframetrcs(io, ifrm, ivol)       # read from 4D data
-trcs = readframetrcs(io, ifrm, ivol, ihyp) # read from 5D data
-readframetrcs!(io, trcs, ifrm)             # in-place read from 3D data
-readframetrcs!(io, trcs, ifrm, ivol)       # in-place read from 4D data
-readframetrcs!(io, trcs, ifrm, ivol, ihyp) # in-place read from 5D data
+trcs = readframetrcs(io, ifrm)                 # read from 3D data
+trcs = readframetrcs(io, ifrm, ivol)           # read from 4D data
+trcs = readframetrcs(io, ifrm, ivol, ihyp)     # read from 5D data
+trcs = readframetrcs(io, ifrm, ivol, ihyp, i6) # read from 6D data
+...
+readframetrcs!(io, trcs, ifrm)                 # in-place read from 3D data
+readframetrcs!(io, trcs, ifrm, ivol)           # in-place read from 4D data
+readframetrcs!(io, trcs, ifrm, ivol, ihyp)     # in-place read from 5D data
+readframetrcs!(io, trcs, ifrm, ivol, ihyp, i6) # in-place read from 6D data
+...
 ```
 
 
@@ -455,7 +467,7 @@ writeframe(io, trcs, hdrs)
 ```
 
 
-To loop over all frames in a datset of arbitrary dimension, TeaSeis.jl provides an iterator-type API:
+To loop over all frames in a dataset of arbitrary dimension, TeaSeis.jl provides an iterator-type API:
 
 
 ```julia
@@ -500,10 +512,12 @@ Methods for finding the fold of a frame:
 
 
 ```julia
-fold(io, hdrs)             # get fold by examining the headers `hdrs` from a frame
-fold(io, ifrm)             # get fold from 3D data set using JavaSeis `TraceMap` file
-fold(io, ifrm, ivol)       # get fold from 4D data set using JavaSeis `TraceMap` file
-fold(io, ifrm, ivol, ihyp) # get fold from 5D data set using JavaSeis `TraceMap` file
+fold(io, hdrs)                 # get fold by examining the headers `hdrs` from a frame
+fold(io, ifrm)                 # get fold from a 3D data set using the JavaSeis `TraceMap` file
+fold(io, ifrm, ivol)           # get fold from a 4D data set using the JavaSeis `TraceMap` file
+fold(io, ifrm, ivol, ihyp)     # get fold from a 5D data set using the JavaSeis `TraceMap` file
+fold(io, ifrm, ivol, ihyp, i6) # get fold from a 6D data set using the JavaSeis `TraceMap` file
+...
 ```
 
 
@@ -512,19 +526,23 @@ fold(io, ifrm, ivol, ihyp) # get fold from 5D data set using JavaSeis `TraceMap`
 ## Alternative read/write methods (N-Dimensional slices)
 
 
-We supply convenience methods for reading and writing arbitrary patches of data.  If frames are not full, then the read algorithms include automatic regularization of the frames, and the write algorithms include automatic left justification.  In turn, this means that the convenience of the following methods may come at the expense of extra I/O operations.
+We supply convenience methods for reading and writing arbitrary patches of data.  If frames are not full, then the read algorithms include automatic regularization of the frames, and the write algorithms include automatic left justification.  In turn, this means that the convenience of the following methods may come at the expense of extra I/O operations.  This is especially true for JavaSeis datasets that are of 6 or more dimensions.
 
 
 **Reading:**
 
 
 ```julia
-trcs, hdrs = read(io, 1:10, 2:3, 4)           # read from 3D data (frame 4, traces 2-3, and time samples 1-10)
-trcs, hdrs = read(io, 1:10, 2:3, 4, :)        # read from 4D data (all volumes, frame 4, traces 2-3, and time samples 1-10)
-trcs, hdrs = read(io, 1:10, 2:3, 4, :, 2:2:4) # read from 5D data (Hypercubes 2 and 4, all volumes, frame 4, traces 2-3 and time samples 1-10)
-read!(io, trcs, hdrs, 1:10, 2:3, 4)           # in-place read from 3D data
-read!(io, trcs, hdrs, 1:10, 2:3, 4, :)        # in-place read from 4D data
-read!(io, trcs, hdrs, 1:10, 2:3, 4, :, 2:2:4) # in-place read from 5D data
+trcs, hdrs = read(io, 1:10, 2:3, 4)              # read from 3D data (frame 4, traces 2-3, and time samples 1-10)
+trcs, hdrs = read(io, 1:10, 2:3, 4, :)           # read from 4D data (all volumes, frame 4, traces 2-3, and time samples 1-10)
+trcs, hdrs = read(io, 1:10, 2:3, 4, :, 2:2:4)    # read from 5D data (Hypercubes 2 and 4, all volumes, frame 4, traces 2-3 and time samples 1-10)
+trcs, hdrs = read(io, 1:10, 2:3, 4, :, 2:2:4, 1) # read from 6D data (element 1 from the 6th dimension, hypercubes 2 and 4, all volumnes, frame 4, traces 2-3 and time samples 1-10)
+...
+read!(io, trcs, hdrs, 1:10, 2:3, 4)              # in-place read from 3D data
+read!(io, trcs, hdrs, 1:10, 2:3, 4, :)           # in-place read from 4D data
+read!(io, trcs, hdrs, 1:10, 2:3, 4, :, 2:2:4)    # in-place read from 5D data
+read!(io, trcs, hdrs, 1:10, 2:3, 4, :, 2:2:4, 1) # in-place read from 6D data
+...
 ```
 
 
@@ -542,7 +560,7 @@ and only headers (for example):
 
 ```julia
 hdrs = readhdrs(io, 2:3, 4)
-readhdrs!(io, hdrs, 2:3, 4) # in-place version of previous line
+readhdrs!(io, hdrs, 2:3, 4) # in-place version of previous line//
 ```
 
 
@@ -573,9 +591,11 @@ The first set of API is for writing one frame at a time:
 
 
 ```julia
-writeframe(io, trcs, ifrm)             # write to 3D data
-writeframe(io, trcs, ifrm, ivol)       # write to 4D data
-writeframe(io, trcs, ifrm, ivol, ihyp) # write to 5D data
+writeframe(io, trcs, ifrm)                 # write to 3D data
+writeframe(io, trcs, ifrm, ivol)           # write to 4D data
+writeframe(io, trcs, ifrm, ivol, ihyp)     # write to 5D data
+writeframe(io, trcs, ifrm, ivol, ihyp, i6) # write to 6D data
+...
 ```
 
 
@@ -583,9 +603,11 @@ The second set of API is for writing arbitrary N-dimensional slices of data:
 
 
 ```julia
-write(io, trcs, :, 1:10, 3:2:5)       # write to 3D data, all samples; traces 1-10; frames 3, 5
-write(io, trcs, :, 1:10, 3:2:5, 6)    # write to 4D data, all samples; traces 1-10; frames 3, 5; volume 6
-write(io, trcs, :, 1:10, 3:2:5, 6, :) # write to 5D data, all samples; traces 1-10; frames 3, 5; volume 6, all hypercubes
+write(io, trcs, :, 1:10, 3:2:5)            # write to 3D data, all samples; traces 1-10; frames 3, 5
+write(io, trcs, :, 1:10, 3:2:5, 6)         # write to 4D data, all samples; traces 1-10; frames 3, 5; volume 6
+write(io, trcs, :, 1:10, 3:2:5, 6, :)      # write to 5D data, all samples; traces 1-10; frames 3, 5; volume 6, all hypercubes
+write(io, trcs, :, 1:10, 3:2:5, 6, :, 1:2) # write to 6D data, all samples; traces 1-10; frames 3, 5; volume 6, all hypercubes, elements 1 and 2 from dimension 6
+...
 ```
 
 
@@ -750,33 +772,34 @@ Several convenience methods are supplied for querying `io::JSeis`:
 
 
 ```julia
-ndims(io)            # returns `Int`, number of dimensions in the JavaSeis dataset
-length(io)           # returns `Int`, the number of frames in the JavaSeis dataset, equivalent to `prod(size(io)[3:end])`
-size(io)             # returns `NTuple{Int}`, size of JavaSeis dataset
-size(io,i)           # returns `Int`, size of JavaSeis dataset along dimension `i::Int`
-props(io)            # returns `NTuple{TraceProperty}`, trace property along all dimensions
-props(io,i)          # returns `TraceProperty`, trace property along dimension `i::Int`
-propdefs(io)         # returns `NTuple{TracePropertyDef}`, trace property definition along all dimensions
-propdefs(io,i)       # returns `TracePropertyDef`, trace property along dimension `i::Int`
-labels(io)           # returns `NTuple{String}`, trace property labels along all dimensions
-labels(io,i)         # returns `String`, trace property label along dimension `i::Int`
-units(io)            # returns `NTuple{String}`, units along all dimensions
-units(io,i)          # returns `String, unit along dimension `i::Int`
-domains(io)          # returns `NTuple{String}`, data domains along all dimensions
-domains(io,i)        # returns `String`, data domain along dimension `i::Int`
-pstarts(io)          # returns `NTuple{Float64}`, physical starts along all dimensions
-pstarts(io,i)        # returns `Float64`, physical start along dimension `i::Int`
-pincs(io)            # returns `NTuple{Float64}`, physical increments along all dimensions
-pincs(io,i)          # returns `Float64`, physical increment along dimension `i::Int`
-lstarts(io)          # returns `NTuple{Int32}`, logical starts along all dimensions
-lstarts(io,i)        # returns `Int32`, logical start along dimension `i::Int`
-lincs(io)            # returns `NTuple{Int32}`, logical increments along all dimensions
-lincs(io,i)          # returns `Int32`, logical increment along dimension `i::Int`
-lrange(io)           # returns `NTuple{StepRange{Int64}}`, logical range along all dimensions
-lrange(io,i)         # returns `StepRange{Int64}`, logical range along dimension `i::Int`
-isempty(io)          # returns true if the dataset is empty (without trace or header extents)
-in(prop,io)          # returns true if the trace property `prop` exists in `io` --  `prop` can be of types `::TraceProperty`, `::TracePropertyDef`, or `::String`
-dataproperty(io,nm)  # returns the value held in the data property: `nm::String`
+ndims(io)              # returns `Int`, number of dimensions in the JavaSeis dataset
+length(io)             # returns `Int`, the number of frames in the JavaSeis dataset, equivalent to `prod(size(io)[3:end])`
+size(io)               # returns `NTuple{Int}`, size of JavaSeis dataset
+size(io,i)             # returns `Int`, size of JavaSeis dataset along dimension `i::Int`
+props(io)              # returns `NTuple{TraceProperty}`, trace property along all dimensions
+props(io,i)            # returns `TraceProperty`, trace property along dimension `i::Int`
+propdefs(io)           # returns `NTuple{TracePropertyDef}`, trace property definition along all dimensions
+propdefs(io,i)         # returns `TracePropertyDef`, trace property along dimension `i::Int`
+labels(io)             # returns `NTuple{String}`, trace property labels along all dimensions
+labels(io,i)           # returns `String`, trace property label along dimension `i::Int`
+units(io)              # returns `NTuple{String}`, units along all dimensions
+units(io,i)            # returns `String, unit along dimension `i::Int`
+domains(io)            # returns `NTuple{String}`, data domains along all dimensions
+domains(io,i)          # returns `String`, data domain along dimension `i::Int`
+pstarts(io)            # returns `NTuple{Float64}`, physical starts along all dimensions
+pstarts(io,i)          # returns `Float64`, physical start along dimension `i::Int`
+pincs(io)              # returns `NTuple{Float64}`, physical increments along all dimensions
+pincs(io,i)            # returns `Float64`, physical increment along dimension `i::Int`
+lstarts(io)            # returns `NTuple{Int32}`, logical starts along all dimensions
+lstarts(io,i)          # returns `Int32`, logical start along dimension `i::Int`
+lincs(io)              # returns `NTuple{Int32}`, logical increments along all dimensions
+lincs(io,i)            # returns `Int32`, logical increment along dimension `i::Int`
+lrange(io)             # returns `NTuple{StepRange{Int64}}`, logical range along all dimensions
+lrange(io,i)           # returns `StepRange{Int64}`, logical range along dimension `i::Int`
+isempty(io)            # returns true if the dataset is empty (without trace or header extents)
+in(prop,io)            # returns true if the trace property `prop` exists in `io` --  `prop` can be of types `::TraceProperty`, `::TracePropertyDef`, or `::String`
+dataproperty(io,nm)    # returns the value held in the data property: `nm::String`
+hasdataproperty(io,nm) # returns true if the data property corresponding to label `nm::String` is in `io::JSeis`
 ```
 
 
@@ -811,39 +834,40 @@ copy!(io, hdrs, io1, hdrs1) # copy values from `hdrs1::Array{UInt8,2}` to `hdrs:
 - [`Base.ndims`](README.md#Base.ndims-Tuple{TeaSeis.JSeis})
 - [`Base.read`](README.md#Base.read-Tuple{TeaSeis.JSeis,Union{Colon,Int64,Range{Int64}},Union{Colon,Int64,Range{Int64}},Vararg{Union{Colon,Int64,Range{Int64}},N}})
 - [`Base.read!`](README.md#Base.read!-Tuple{TeaSeis.JSeis,AbstractArray{Float32,N},AbstractArray{UInt8,N},Union{Colon,Int64,Range{Int64}},Union{Colon,Int64,Range{Int64}},Vararg{Union{Colon,Int64,Range{Int64}},N}})
-- [`Base.size`](README.md#Base.size-Tuple{TeaSeis.JSeis,Int64})
 - [`Base.size`](README.md#Base.size-Tuple{TeaSeis.JSeis})
+- [`Base.size`](README.md#Base.size-Tuple{TeaSeis.JSeis,Int64})
 - [`Base.write`](README.md#Base.write)
 - [`Base.write`](README.md#Base.write-Tuple{TeaSeis.JSeis,AbstractArray{Float32,N},Union{Colon,Int64,Range{Int64}},Union{Colon,Int64,Range{Int64}},Vararg{Union{Colon,Int64,Range{Int64}},N}})
 - [`TeaSeis.allocframe`](README.md#TeaSeis.allocframe-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.allocframehdrs`](README.md#TeaSeis.allocframehdrs-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.allocframetrcs`](README.md#TeaSeis.allocframetrcs-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.dataproperty`](README.md#TeaSeis.dataproperty-Tuple{TeaSeis.JSeis,String})
-- [`TeaSeis.domains`](README.md#TeaSeis.domains-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.domains`](README.md#TeaSeis.domains-Tuple{TeaSeis.JSeis,Int64})
+- [`TeaSeis.domains`](README.md#TeaSeis.domains-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.fold`](README.md#TeaSeis.fold-Tuple{TeaSeis.JSeis,Array{UInt8,2}})
 - [`TeaSeis.fold`](README.md#TeaSeis.fold-Tuple{TeaSeis.JSeis,Vararg{Int64,N}})
+- [`TeaSeis.hasdataproperty`](README.md#TeaSeis.hasdataproperty-Tuple{Any,Any})
 - [`TeaSeis.jscreate`](README.md#TeaSeis.jscreate-Tuple{String})
 - [`TeaSeis.jsopen`](README.md#TeaSeis.jsopen-Tuple{String,String})
 - [`TeaSeis.jsopen`](README.md#TeaSeis.jsopen-Tuple{String})
 - [`TeaSeis.labels`](README.md#TeaSeis.labels-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.labels`](README.md#TeaSeis.labels-Tuple{TeaSeis.JSeis,Int64})
 - [`TeaSeis.leftjustify!`](README.md#TeaSeis.leftjustify!-Tuple{TeaSeis.JSeis,Array{Float32,2},Array{UInt8,2}})
-- [`TeaSeis.lincs`](README.md#TeaSeis.lincs-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.lincs`](README.md#TeaSeis.lincs-Tuple{TeaSeis.JSeis,Int64})
-- [`TeaSeis.lrange`](README.md#TeaSeis.lrange-Tuple{TeaSeis.JSeis})
+- [`TeaSeis.lincs`](README.md#TeaSeis.lincs-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.lrange`](README.md#TeaSeis.lrange-Tuple{TeaSeis.JSeis,Int64})
+- [`TeaSeis.lrange`](README.md#TeaSeis.lrange-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.lstarts`](README.md#TeaSeis.lstarts-Tuple{TeaSeis.JSeis,Int64})
 - [`TeaSeis.lstarts`](README.md#TeaSeis.lstarts-Tuple{TeaSeis.JSeis})
-- [`TeaSeis.pincs`](README.md#TeaSeis.pincs-Tuple{TeaSeis.JSeis,Int64})
 - [`TeaSeis.pincs`](README.md#TeaSeis.pincs-Tuple{TeaSeis.JSeis})
+- [`TeaSeis.pincs`](README.md#TeaSeis.pincs-Tuple{TeaSeis.JSeis,Int64})
 - [`TeaSeis.prop`](README.md#TeaSeis.prop-Tuple{TeaSeis.JSeis,String})
-- [`TeaSeis.propdefs`](README.md#TeaSeis.propdefs-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.propdefs`](README.md#TeaSeis.propdefs-Tuple{TeaSeis.JSeis,Int64})
-- [`TeaSeis.props`](README.md#TeaSeis.props-Tuple{TeaSeis.JSeis})
+- [`TeaSeis.propdefs`](README.md#TeaSeis.propdefs-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.props`](README.md#TeaSeis.props-Tuple{TeaSeis.JSeis,Int64})
-- [`TeaSeis.pstarts`](README.md#TeaSeis.pstarts-Tuple{TeaSeis.JSeis})
+- [`TeaSeis.props`](README.md#TeaSeis.props-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.pstarts`](README.md#TeaSeis.pstarts-Tuple{TeaSeis.JSeis,Int64})
+- [`TeaSeis.pstarts`](README.md#TeaSeis.pstarts-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.readframe`](README.md#TeaSeis.readframe-Tuple{TeaSeis.JSeis,Vararg{Int64,N}})
 - [`TeaSeis.readframe!`](README.md#TeaSeis.readframe!-Tuple{TeaSeis.JSeis,AbstractArray{Float32,2},AbstractArray{UInt8,2},Vararg{Int64,N}})
 - [`TeaSeis.readframehdrs`](README.md#TeaSeis.readframehdrs-Tuple{TeaSeis.JSeis,Vararg{Int64,N}})
@@ -944,6 +968,17 @@ fold(io, idx...)
 ```
 
 Compute the fold of a frame where idx is the frame/volume/hypercube indices.  For example, `fold(jsopen("file.js"),1)` for a 3D dataset, `fold(jsopen("file.js",1,2))` for a 4D dataset, and `fold(jsopen("file.js"),1,2,3)` for a 5D dataset.
+
+<a id='TeaSeis.hasdataproperty-Tuple{Any,Any}' href='#TeaSeis.hasdataproperty-Tuple{Any,Any}'>#</a>
+**`TeaSeis.hasdataproperty`** &mdash; *Method*.
+
+
+
+```
+hasdataproperty(io, label)
+```
+
+return true if `io::JSeis` contains the data property corresponding to `label`.  Otherwise, return false.
 
 <a id='TeaSeis.jscreate-Tuple{String}' href='#TeaSeis.jscreate-Tuple{String}'>#</a>
 **`TeaSeis.jscreate`** &mdash; *Method*.
