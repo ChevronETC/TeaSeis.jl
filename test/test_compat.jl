@@ -25,7 +25,7 @@ using TeaSeis, LightXML, Base.Test
     io = jsopen("test.js")
     @test labels(io) == pmlbls
 
-    xml = parse_file("$(io.filename)/FileProperties.xml")
+    xml = parse_file(joinpath(io.filename, "FileProperties.xml"))
     lbls = split(content(TeaSeis.get_file_property_element(xml, "AxisLabels")))
     @test lbls == jslbls
     rm(io)

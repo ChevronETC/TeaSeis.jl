@@ -11,7 +11,7 @@ mkdir(rundir)
     # The new expectation is that the leftjustify! method considers TRC_TYPE = 1 to be live
     # and TRC_TYPE != 1 to be not live.  The previous behavior was TRC_TYPE = 1 to be live
     # and TRC_TYPE = 2 to be dead.  The new behavior should be more robust than the old behavior.
-    io = jsopen("$(rundir)/data.js", "w", axis_lengths=[10,11,1], axis_lstarts=[0,1000,500])
+    io = jsopen(joinpath(rundir,"data.js"), "w", axis_lengths=[10,11,1], axis_lstarts=[0,1000,500])
     trcs, hdrs = allocframe(io)
     rand!(trcs)
     for i = 1:3
@@ -33,7 +33,7 @@ mkdir(rundir)
     rm(jsopen("$(rundir)/data.js"))
 
     # issue with large number of frames and a large number of extents
-    io = jsopen("$(rundir)/data.js", "w", axis_lengths=[1501,701-301+1,648-248+1,5684], axis_lstarts=[1,301,248,1], dataformat=Int16, nextents=261670)
+    io = jsopen(joinpath(rundir,"data.js"), "w", axis_lengths=[1501,701-301+1,648-248+1,5684], axis_lstarts=[1,301,248,1], dataformat=Int16, nextents=261670)
     trcs,hdrs = allocframe(io)
     rand!(trcs)
     map(i->set!(prop(io, stockprop[:TRC_TYPE]), hdrs, i, tracetype[:live]), 1:307)
@@ -43,14 +43,14 @@ mkdir(rundir)
     map(i->set!(prop(io, stockprop[:VOLUME])  , hdrs, i, 1001            ), 1:307)
     writeframe(io,trcs,hdrs)
     close(io)
-    io = jsopen("$(rundir)/data.js")
+    io = jsopen(joinpath(rundir, "data.js"))
     trcs_tst, hdrs_tst = readframe(io, 251, 1001)
     @test trcs[:,1:307] ≈ trcs_tst[:,1:307]
     @test hdrs[:,1:307] == hdrs_tst[:,1:307]
-    rm(jsopen("$(rundir)/data.js"))
+    rm(jsopen(joinpath(rundir, "data.js")))
 
     # issue with regularize function for non-unitary lstart
-    io = jsopen("$(rundir)/data.js", "w", axis_lengths=[10,11,12], axis_lstarts=[0,1000,500], dataformat=Int16)
+    io = jsopen(joinpath(rundir, "data.js"), "w", axis_lengths=[10,11,12], axis_lstarts=[0,1000,500], dataformat=Int16)
     trcs, hdrs = allocframe(io)
     for i = 1:12
         for j = 1:6
@@ -64,26 +64,26 @@ mkdir(rundir)
         writeframe(io, trcs, hdrs)
     end
     close(io)
-    io = jsopen("$(rundir)/data.js")
+    io = jsopen(joinpath(rundir, "data.js"))
     hdrs = view(readhdrs(io, :, 511), :, :, 1)
     for j = 1:6
         @test get(prop(io, stockprop[:TRACE]), hdrs, j) == 999+j
     end
-    rm(jsopen("$(rundir)/data.js"))
+    rm(jsopen(joinpath(rundir, "data.js")))
 
     # issue with regularize function for non-unitary lstart
-        io = jsopen("$(rundir)/data.js", "w", axis_lengths=[10,11,12], axis_lstarts=[0,1000,500], dataformat=Int16)
-        @test io.description == "data"
-        close(io)
-        rm(jsopen("$(rundir)/data.js"))
-        io = jsopen("$(rundir)/group@data.js", "w", axis_lengths=[10,11,12], axis_lstarts=[0,1000,500], dataformat=Int16)
-        @test io.description == "data"
-        close(io)
-        rm(jsopen("$(rundir)/group@data.js"))
-        io = jsopen("$(rundir)/group@data.js", "w", axis_lengths=[10,11,12], axis_lstarts=[0,1000,500], dataformat=Int16, description="group@data")
-        @test io.description == "group@data"
-        close(io)
-        rm(jsopen("$(rundir)/group@data.js"))
+    io = jsopen(joinpath(rundir, "data.js"), "w", axis_lengths=[10,11,12], axis_lstarts=[0,1000,500], dataformat=Int16)
+    @test io.description == "data"
+    close(io)
+    rm(jsopen(joinpath(rundir, "data.js")))
+    io = jsopen(joinpath(rundir, "group@data.js"), "w", axis_lengths=[10,11,12], axis_lstarts=[0,1000,500], dataformat=Int16)
+    @test io.description == "data"
+    close(io)
+    rm(jsopen(joinpath(rundir, "group@data.js")))
+    io = jsopen(joinpath(rundir, "group@data.js"), "w", axis_lengths=[10,11,12], axis_lstarts=[0,1000,500], dataformat=Int16, description="group@data")
+    @test io.description == "group@data"
+    close(io)
+    rm(jsopen(joinpath(rundir, "group@data.js")))
 
     # fileset that does not have a correct sample header, passes abstract string to TracePropertyDef
     pdef = TracePropertyDef(split("hello world")[1], split("again again")[1], Int32, 1)
@@ -92,31 +92,31 @@ mkdir(rundir)
 
     # description should always be in quotes in FileProperties.xml, but with no quotes when read in:
     pdef = TracePropertyDef("HDR", "HDR DESCRIPTON", Int32, 1)
-    io = jsopen("$(rundir)/data.js", "w", axis_lengths=[10,11,12], properties=[pdef])
+    io = jsopen(joinpath(rundir, "data.js"), "w", axis_lengths=[10,11,12], properties=[pdef])
     close(io)
-    io = jsopen("$(rundir)/data.js")
+    io = jsopen(joinpath(rundir, "data.js"))
     @test strip(prop(io,"HDR").def.description, ['"']) == prop(io,"HDR").def.description
     close(io)
-    io = jsopen("$(rundir)/data2.js", "w", similarto="$(rundir)/data.js")
+    io = jsopen(joinpath(rundir, "data2.js"), "w", similarto="$(rundir)/data.js")
     @test strip(prop(io,"HDR").def.description, ['"']) == prop(io,"HDR").def.description
     close(io)
-    rm(jsopen("$(rundir)/data.js"))
-    rm(jsopen("$(rundir)/data2.js"))
+    rm(jsopen(joinpath(rundir, "data.js")))
+    rm(jsopen(joinpath(rundir, "data2.js")))
 
     # create/open an existing incomplete/corrupted data-set
-    isdir("$(rundir)/data-dummy.js") && rm("$(rundir)/data-dummy.js", recursive=true)
-    mkdir("$(rundir)/data-dummy.js")
-    touch("$(rundir)/data-dummy.js/nothing")
-    jsopen("$(rundir)/data-dummy.js", "w", axis_lengths=[1,2,3])
-    @test size(jsopen("$(rundir)/data-dummy.js")) == (1,2,3)
-    rm(jsopen("$(rundir)/data-dummy.js"))
+    isdir(joinpath(rundir, "data-dummy.js")) && rm("$(rundir)/data-dummy.js", recursive=true)
+    mkdir(joinpath(rundir, "data-dummy.js"))
+    touch(joinpath(rundir, "data-dummy.js/nothing"))
+    jsopen(joinpath(rundir, "data-dummy.js"), "w", axis_lengths=[1,2,3])
+    @test size(jsopen(joinpath(rundir, "data-dummy.js"))) == (1,2,3)
+    rm(jsopen(joinpath(rundir, "data-dummy.js")))
 
-    isdir("$(rundir)/data-dummy.js") && rm("$(rundir)/data-dummy.js", recursive=true)
-    mkdir("$(rundir)/data-dummy.js")
-    touch("$(rundir)/data-dummy.js/nothing")
-    jscreate("$(rundir)/data-dummy.js", axis_lengths=[1,2,3])
-    @test size(jsopen("$(rundir)/data-dummy.js")) == (1,2,3)
-    rm(jsopen("$(rundir)/data-dummy.js"))
+    isdir(joinpath(rundir, "data-dummy.js")) && rm("$(rundir)/data-dummy.js", recursive=true)
+    mkdir(joinpath(rundir, "data-dummy.js"))
+    touch(joinpath(rundir, "data-dummy.js/nothing"))
+    jscreate(joinpath(rundir, "data-dummy.js"), axis_lengths=[1,2,3])
+    @test size(jsopen(joinpath(rundir, "data-dummy.js"))) == (1,2,3)
+    rm(jsopen(joinpath(rundir, "data-dummy.js")))
 
     @testset "lstrt=$(lstrt),lincrs=$(lincrs),sz=$(sz),second=$(second),T=$(T)" for lstrt in ([1,1,1,1,1], [10,20,30,40,50]), lincrs in ([1,1,1,1,1],[1,2,3,4,5]), sz in ([5,6,7], [5,6,7,8], [5,6,7,8,9]), second in (["."],["$(rundir)/second"]), T in (Float32, Int16)
         write(STDOUT, "lstrt=$(lstrt),lincrs=$(lincrs),sz=$(sz),second=$(second),T=$(T)\n")
@@ -183,10 +183,10 @@ mkdir(rundir)
         #
         # trace map tests:
         #
-        @test isfile("$(filename1)/TraceMap")
-        @test filesize("$(filename1)/TraceMap") == prod(sz[3:end]) * sizeof(Int32)
+        @test isfile(joinpath(filename1, "TraceMap"))
+        @test filesize(joinpath(filename1, "TraceMap")) == prod(sz[3:end]) * sizeof(Int32)
         @test io.mapped == true
-        iotrcmp = open("$(filename1)/TraceMap")
+        iotrcmp = open(joinpath(filename1, "TraceMap"))
         @test read(iotrcmp,Int32,prod(sz[3:end])) == zeros(Int32,prod(sz[3:end]))
         close(iotrcmp)
 
@@ -268,7 +268,7 @@ mkdir(rundir)
         end
 
         # ensure TraceMap was correctly written
-        iotrcmap = open("$(filename1)/TraceMap")
+        iotrcmap = open(joinpath(filename1, "TraceMap"))
         @test read(iotrcmap, Int32, length(io)) == sz[2]*ones(Int32,prod(sz[3:end]))
         close(iotrcmap)
 
@@ -376,9 +376,9 @@ mkdir(rundir)
         #
         # similar method tests, TODO -- more of these
         #
-        filename3 = "$(rundir)/file-3-" * randstring() * ".js"
-        filename4 = "$(rundir)/file-4-" * randstring() * ".js"
-        filename5 = "$(rundir)/file-5-" * randstring() * ".js"
+        filename3 = joinpath(rundir, "file-3-" * randstring() * ".js")
+        filename4 = joinpath(rundir, "file-4-" * randstring() * ".js")
+        filename5 = joinpath(rundir, "file-5-" * randstring() * ".js")
         io3 = jsopen(filename3, "w", similarto=filename1)
         io4 = jsopen(filename4, "w", similarto=filename1, axis_lengths=[9,10,11,12,13][1:n], axis_lincs=[1,2,1,2,1][1:n])
         io5 = jsopen(filename5, "w", similarto=filename1, properties_add = [stockprop[:CDP_X]])
@@ -534,9 +534,9 @@ mkdir(rundir)
         #
 
         # with current secondary
-        for second in (nothing, ["$(rundir)/newsec"])
-            filename1cp = "$(rundir)/file-1-cp-$(randstring()).js"
-            filename1mv = "$(rundir)/file-1-mv-$(randstring()).js"
+        for second in (nothing, [joinpath(rundir, "newsec")])
+            filename1cp = joinpath(rundir, "file-1-cp-$(randstring()).js")
+            filename1mv = joinpath(rundir, "file-1-mv-$(randstring()).js")
             cp(jsopen(filename1), filename1cp, secondaries=second)
             iocp = jsopen(filename1cp, "r")
             @test length(io) == length(iocp)
@@ -580,7 +580,7 @@ mkdir(rundir)
 
             rm(iomv)
         end
-        rm("$(rundir)/newsec", recursive=true)
+        rm(joinpath(rundir, "newsec"), recursive=true)
 
         #
         # test making a data-set empty
@@ -593,13 +593,13 @@ mkdir(rundir)
 end
 
 @testset "teaseisio, 6 dimensions" begin
-    io = jsopen("test.js", "w", axis_lengths=[2,3,4,5,6,7])
+    io = jsopen(joinpath(rundir, "test.js"), "w", axis_lengths=[2,3,4,5,6,7])
     x = rand(Float32,2,3,4,5,6,7)
     for i = 1:length(io)
         writeframe(io, x[:,:,ind2sub(io,i)...], ind2sub(io,i)...)
     end
     close(io)
-    io = jsopen("test.js")
+    io = jsopen(joinpath(rundir, "test.js"))
     @test size(io) == (2,3,4,5,6,7)
     for i = 1:length(io)
         t,h = readframe(io, ind2sub(io,i)...)
@@ -609,13 +609,13 @@ end
 end
 
 @testset "teaseisio, 9 dimensions" begin
-    io = jsopen("test.js", "w", axis_lengths=[2,3,4,5,6,7,2,1,2])
+    io = jsopen(joinpath(rundir, "test.js"), "w", axis_lengths=[2,3,4,5,6,7,2,1,2])
     x = rand(Float32,2,3,4,5,6,7,2,1,2)
     for i = 1:length(io)
         writeframe(io, x[:,:,ind2sub(io,i)...], ind2sub(io,i)...)
     end
     close(io)
-    io = jsopen("test.js")
+    io = jsopen(joinpath(rundir, "test.js"))
     @test size(io) == (2,3,4,5,6,7,2,1,2)
     for i = 1:length(io)
         t,h = readframe(io, ind2sub(io,i)...)
@@ -625,8 +625,8 @@ end
 end
 
 @testset "teaseisio, data property" begin
-    io = jsopen("test.js", "w", axis_lengths=[2,3,4], dataproperties=[DataProperty("PROP", Int32, 10)])
-    io = jsopen("test.js")
+    io = jsopen(joinpath(rundir, "test.js"), "w", axis_lengths=[2,3,4], dataproperties=[DataProperty("PROP", Int32, 10)])
+    io = jsopen(joinpath(rundir, "test.js"))
     @test hasdataproperty(io,"PROP") == true
     @test hasdataproperty(io, "NOPROP") == false
     @test dataproperty(io,"PROP") == 10
