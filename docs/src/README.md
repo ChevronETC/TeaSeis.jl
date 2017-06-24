@@ -326,10 +326,10 @@ readtrcs!(io, trcs, 1:10, 2:3, 4) # in-place version of previous line
 ```
 and only headers (for example):
 ```julia
-hdrs = readhdrs(io, 2:3, 4)
-readhdrs!(io, hdrs, 2:3, 4) # in-place version of previous line//
+hdrs = readhdrs(io, :, 2:3, 4)
+readhdrs!(io, hdrs, :, 2:3, 4) # in-place version of previous line//
 ```
-Note that when using `readhdrs` and `readhdrs!` one does not specify a slice range for the first dimension.
+Note that when using `readhdrs` and `readhdrs!` the slice range for the first dimension is always `:`.
 
 **Writing:**
 ```julia
