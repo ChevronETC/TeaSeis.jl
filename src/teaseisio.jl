@@ -616,7 +616,7 @@ function get_status(io::IOStream)
     for ln in eachline(io)
         if ln[1] != '#'
             x = split(ln, '=')
-            if x[2] == "true"
+            if chomp(x[2]) == "true"
                 return true
             end
         end
