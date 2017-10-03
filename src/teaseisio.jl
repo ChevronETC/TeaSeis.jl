@@ -696,7 +696,7 @@ end
 
 function delete_first_line(filename::AbstractString)
     io = open(filename)
-    lines = readlines(io)
+    lines = VERSION < v"0.6.0" ? readlines(io) : readlines(io,chomp=false)
     close(io)
     io = open(filename, "w")
     for i = 2:length(lines)
