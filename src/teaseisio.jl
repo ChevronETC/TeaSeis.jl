@@ -1490,11 +1490,11 @@ readframehdrs(io::JSeis, idx::Int...) = readframehdrs_impl(io, sub2ind(io, idx))
 
 function parserngs(io::JSeis, smprng::Union{Int,Range{Int},Colon}, trcrng::Union{Int,Range{Int},Colon}, rng::Union{Int,Range{Int},Colon}...)
     smprng = isa(smprng, Colon) ? lrange(io,1) : smprng
-    smprng = isa(smprng, Int) ? (smprng:smprng) : smprng
+    smprng = isa(smprng, Int) ? (smprng:1:smprng) : smprng
     trcrng = isa(trcrng, Colon) ? lrange(io,2) : trcrng
-    trcrng = isa(trcrng, Int) ? (trcrng:trcrng) : trcrng
+    trcrng = isa(trcrng, Int) ? (trcrng:1:trcrng) : trcrng
     rng = ntuple(i->isa(rng[i],Colon) ? lrange(io,2+i) : rng[i], length(rng))
-    rng = ntuple(i->isa(rng[i],Int) ? (rng[i]:rng[i]) : rng[i], length(rng))
+    rng = ntuple(i->isa(rng[i],Int) ? (rng[i]:1:rng[i]) : rng[i], length(rng))
     nrng = ntuple(i->length(rng[i]), length(rng))
     smprng, trcrng, rng, nrng
 end

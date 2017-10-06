@@ -350,6 +350,8 @@ mkdir(rundir)
         if n == 3
             write(io, trcs, :, :, :)
             @test readtrcs(io, :, :, :) ≈ trcs
+            write(io, trcs[:,:,1:1], :, :, lstrt[3])
+            @test readtrcs(io, :, :, lstrt[3]) ≈ trcs[:,:,1:1]
             trcstst, hdrs = read(io, :, :, :)
             @test trcs ≈ trcstst
             write(io, 2*trcs[:,1:4,2:2], :, lstrt[2]:lincrs[2]:(lstrt[2]+3*lincrs[2]), (lstrt[3]+1*lincrs[3]):lincrs[3]:(lstrt[3]+1*lincrs[3]))
@@ -358,6 +360,8 @@ mkdir(rundir)
         elseif n == 4
             write(io, trcs, :, :, :, :)
             @test readtrcs(io, :, :, :, :) ≈ trcs
+            write(io, trcs[:,:,:,1:1], :, :, :, lstrt[4])
+            @test readtrcs(io, :, :, :, lstrt[4]) ≈ trcs[:,:,:,1:1]
             trcstst, hdrs = read(io, :, :, :, :)
             @test trcs ≈ trcstst
             write(io, 2*trcs[:,1:4,2:2,1:3], :, lstrt[2]:lincrs[2]:(lstrt[2]+3*lincrs[2]), (lstrt[3]+1*lincrs[3]):lincrs[3]:(lstrt[3]+1*lincrs[3]), lstrt[4]:lincrs[4]:(lstrt[4]+2*lincrs[4]))
@@ -366,6 +370,8 @@ mkdir(rundir)
         elseif n == 5
             write(io, trcs, :, :, :, :, :)
             @test readtrcs(io, :, :, :, :, :) ≈ trcs
+            write(io, trcs[:,:,:,:,1:1], :, :, :, :, lstrt[5])
+            @test readtrcs(io, :, :, :, :, lstrt[5]) ≈ trcs[:,:,:,:,1:1]
             trcstst, hdrs = read(io, :, :, :, :, :)
             @test trcs ≈ trcstst
             write(io, 2*trcs[:,1:4,2:2,1:3,1:2], :, lstrt[2]:lincrs[2]:(lstrt[2]+3*lincrs[2]), (lstrt[3]+1*lincrs[3]):lincrs[3]:(lstrt[3]+1*lincrs[3]), lstrt[4]:lincrs[4]:(lstrt[4]+2*lincrs[4]), lstrt[5]:lincrs[5]:(lstrt[5]+1*lincrs[5]))
