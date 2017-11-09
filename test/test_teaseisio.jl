@@ -379,6 +379,21 @@ mkdir(rundir)
             @test vec(trcstst) ≈ vec(2*trcs[:,1:4,2:2,1:3,1:2])
         end
 
+        filename6 = joinpath(rundir, "file-6-" * randstring() * ".js")
+        jscreate(filename6, similarto=filename1)
+        io2 = jsopen(filename6, "r+")
+        if n == 3
+            write(io2, trcs[:,:,1:1], :, :, lstrt[3])
+            @test fold(io2, 1) == size(io2, 2)
+        elseif n == 4
+            write(io2, trcs[:,:,1:1,1:1], :, :, lstrt[3], lstrt[4])
+            @test fold(io2, 1, 1) == size(io2, 2)
+        elseif n == 5
+            write(io2, trcs[:,:,1:1,1:1,1:1], :, :, lstrt[3], lstrt[4], lstrt[5])
+            @test fold(io2, 1, 1, 1) == size(io2, 2)
+        end
+        rm(jsopen(filename6))
+
         #
         # similar method tests, TODO -- more of these
         #
