@@ -383,17 +383,17 @@ mkdir(rundir)
         jscreate(filename6, similarto=filename1)
         io2 = jsopen(filename6, "r+")
         if n == 3
-            @test fold(io2, 1) == 0
+            @test fold(io2, lstrt[3]) == 0
             write(io2, trcs[:,:,1:1], :, :, lstrt[3])
-            @test fold(io2, 1) == size(io2, 2)
+            @test fold(io2, lstrt[3]) == size(io2, 2)
         elseif n == 4
-            @test fold(io2, 1, 1) == 0
+            @test fold(io2, lstrt[3], lstrt[4]) == 0
             write(io2, trcs[:,:,1:1,1:1], :, :, lstrt[3], lstrt[4])
-            @test fold(io2, 1, 1) == size(io2, 2)
+            @test fold(io2, lstrt[3], lstrt[4]) == size(io2, 2)
         elseif n == 5
-            @test fold(io2, 1, 1, 1) == 0
+            @test fold(io2, lstrt[3], lstrt[4], lstrt[5]) == 0
             write(io2, trcs[:,:,1:1,1:1,1:1], :, :, lstrt[3], lstrt[4], lstrt[5])
-            @test fold(io2, 1, 1, 1) == size(io2, 2)
+            @test fold(io2, lstrt[3], lstrt[4], lstrt[5]) == size(io2, 2)
         end
         rm(jsopen(filename6))
 
