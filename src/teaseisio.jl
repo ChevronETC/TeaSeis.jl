@@ -945,6 +945,9 @@ fold(io::JSeis, idx::Int64...) = fold_impl(io::JSeis, sub2ind(io, idx))
 
 function fold!(io::JSeis, frm::Int64, fld::Int)
     if io.mapped == true
+        if volumeindex(io,frm) == io.currentvolume
+            io.map[mapposition(io, frm)] = unsafe_trunc(Int32,fld)
+        end
         posn = (frm-1)*sizeof(Int32)
         iomap = open(joinpath(io.filename, "TraceMap"), "a")
         seek(iomap, posn)
