@@ -357,6 +357,10 @@ mkdir(rundir)
             write(io, 2*trcs[:,1:4,2:2], :, lstrt[2]:lincrs[2]:(lstrt[2]+3*lincrs[2]), (lstrt[3]+1*lincrs[3]):lincrs[3]:(lstrt[3]+1*lincrs[3]))
             trcstst, hdrs = read(io, :, lstrt[2]:lincrs[2]:(lstrt[2]+3*lincrs[2]), (lstrt[3]+1*lincrs[3]):lincrs[3]:(lstrt[3]+1*lincrs[3]))
             @test vec(trcstst) ≈ vec(2*trcs[:,1:4,2])
+            trcstst, hdrstst = read(io,lstrt[1]:lincrs[1]:(lstrt[1]+lincrs[1]),lstrt[2]:lincrs[2]:(lstrt[2]+lincrs[2]),lstrt[3]:lincrs[3]:(lstrt[3]+lincrs[3]))
+            write(io, trcstst, hdrstst, lstrt[1]:lincrs[1]:(lstrt[1]+lincrs[1]))
+            trcs = readtrcs(io,:,:,:)
+            @test trcstst ≈ trcs[1:2,1:2,1:2]
         elseif n == 4
             write(io, trcs, :, :, :, :)
             @test readtrcs(io, :, :, :, :) ≈ trcs
@@ -367,6 +371,10 @@ mkdir(rundir)
             write(io, 2*trcs[:,1:4,2:2,1:3], :, lstrt[2]:lincrs[2]:(lstrt[2]+3*lincrs[2]), (lstrt[3]+1*lincrs[3]):lincrs[3]:(lstrt[3]+1*lincrs[3]), lstrt[4]:lincrs[4]:(lstrt[4]+2*lincrs[4]))
             trcstst, hdrs = read(io, :, lstrt[2]:lincrs[2]:(lstrt[2]+3*lincrs[2]), (lstrt[3]+1*lincrs[3]):lincrs[3]:(lstrt[3]+1*lincrs[3]), lstrt[4]:lincrs[4]:(lstrt[4]+2*lincrs[4]))
             @test vec(trcstst) ≈ vec(2*trcs[:,1:4,2:2,1:3])
+            trcstst, hdrstst = read(io,lstrt[1]:lincrs[1]:(lstrt[1]+lincrs[1]),lstrt[2]:lincrs[2]:(lstrt[2]+lincrs[2]),lstrt[3]:lincrs[3]:(lstrt[3]+lincrs[3]),lstrt[4]:lincrs[4]:(lstrt[4]+lincrs[4]))
+            write(io, trcstst, hdrstst, lstrt[1]:lincrs[1]:(lstrt[1]+lincrs[1]))
+            trcs = readtrcs(io,:,:,:,:)
+            @test trcstst ≈ trcs[1:2,1:2,1:2,1:2]
         elseif n == 5
             write(io, trcs, :, :, :, :, :)
             @test readtrcs(io, :, :, :, :, :) ≈ trcs
@@ -377,6 +385,10 @@ mkdir(rundir)
             write(io, 2*trcs[:,1:4,2:2,1:3,1:2], :, lstrt[2]:lincrs[2]:(lstrt[2]+3*lincrs[2]), (lstrt[3]+1*lincrs[3]):lincrs[3]:(lstrt[3]+1*lincrs[3]), lstrt[4]:lincrs[4]:(lstrt[4]+2*lincrs[4]), lstrt[5]:lincrs[5]:(lstrt[5]+1*lincrs[5]))
             trcstst, hdrs = read(io, :, lstrt[2]:lincrs[2]:(lstrt[2]+3*lincrs[2]), (lstrt[3]+1*lincrs[3]):lincrs[3]:(lstrt[3]+1*lincrs[3]), lstrt[4]:lincrs[4]:(lstrt[4]+2*lincrs[4]), lstrt[5]:lincrs[5]:(lstrt[5]+1*lincrs[5]))
             @test vec(trcstst) ≈ vec(2*trcs[:,1:4,2:2,1:3,1:2])
+            trcstst, hdrstst = read(io,lstrt[1]:lincrs[1]:(lstrt[1]+lincrs[1]),lstrt[2]:lincrs[2]:(lstrt[2]+lincrs[2]),lstrt[3]:lincrs[3]:(lstrt[3]+lincrs[3]),lstrt[4]:lincrs[4]:(lstrt[4]+lincrs[4]),lstrt[5]:lincrs[5]:(lstrt[5]+lincrs[5]))
+            write(io, trcstst, hdrstst, lstrt[1]:lincrs[1]:(lstrt[1]+lincrs[1]))
+            trcs = readtrcs(io,:,:,:,:,:)
+            @test trcstst ≈ trcs[1:2,1:2,1:2,1:2,1:2]
         end
 
         filename6 = joinpath(rundir, "file-6-" * randstring() * ".js")

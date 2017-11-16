@@ -2041,7 +2041,7 @@ write(io::JSeis, trcs::AbstractArray{Float64}, hdrs::AbstractArray{UInt8}, smprn
 function write_helper(io::JSeis, trcs::AbstractArray{Float32}, hdrs::AbstractArray{UInt8}, ntrcs::Int, nrest::NTuple, hdrlen::Int, smprng::Range, frmtrcs::Array{Float32,2}, frmhdrs::Array{UInt8,2}, trcprop::TraceProperty, frm_smprng::Array{Int,1})
     for idx in CartesianRange(nrest)
         if length(smprng) != io.axis_lengths[1] || size(trcs,2) != io.axis_lengths[2]
-            readframe!(io, frmtrcs, frmhdrs, sub2ind(io, hdrs[:,:,idx]))
+            readframe_impl!(io, frmtrcs, frmhdrs, sub2ind(io, hdrs[:,:,idx]))
             regularize!(io, frmtrcs, frmhdrs)
         end
         for itrc = 1:ntrcs
@@ -2118,7 +2118,7 @@ end
 function write_helper(io::JSeis, trcs::AbstractArray{Float32,3}, hdrs::AbstractArray{UInt8,3}, ntrcs::Int, nrest::NTuple, hdrlen::Int, smprng::Range, frmtrcs::Array{Float32,2}, frmhdrs::Array{UInt8,2}, trcprop::TraceProperty, frm_smprng::Array{Int,1})
     for ifrm = 1:nrest[1]
         if length(smprng) != io.axis_lengths[1] || size(trcs,2) != io.axis_lengths[2]
-            readframe!(io, frmtrcs, frmhdrs, sub2ind(io, hdrs[:,:,ifrm]))
+            readframe_impl!(io, frmtrcs, frmhdrs, sub2ind(io, hdrs[:,:,ifrm]))
             regularize!(io, frmtrcs, frmhdrs)
         end
         for itrc = 1:ntrcs
@@ -2137,7 +2137,7 @@ end
 function write_helper(io::JSeis, trcs::AbstractArray{Float32,4}, hdrs::AbstractArray{UInt8,4}, ntrcs::Int, nrest::NTuple, hdrlen::Int, smprng::Range, frmtrcs::Array{Float32,2}, frmhdrs::Array{UInt8,2}, trcprop::TraceProperty, frm_smprng::Array{Int,1})
     for ivol = 1:nrest[2], ifrm = 1:nrest[1]
         if length(smprng) != io.axis_lengths[1] || size(trcs,2) != io.axis_lengths[2]
-            readframe!(io, frmtrcs, frmhdrs, sub2ind(io, hdrs[:,:,ifrm,ivol]))
+            readframe_impl!(io, frmtrcs, frmhdrs, sub2ind(io, hdrs[:,:,ifrm,ivol]))
             regularize!(io, frmtrcs, frmhdrs)
         end
         for itrc = 1:ntrcs
@@ -2156,7 +2156,7 @@ end
 function write_helper(io::JSeis, trcs::AbstractArray{Float32,5}, hdrs::AbstractArray{UInt8,5}, ntrcs::Int, nrest::NTuple, hdrlen::Int, smprng::Range, frmtrcs::Array{Float32,2}, frmhdrs::Array{UInt8,2}, trcprop::TraceProperty, frm_smprng::Array{Int,1})
     for ihyp = 1:nrest[3], ivol = 1:nrest[2], ifrm = 1:nrest[1]
         if length(smprng) != io.axis_lengths[1] || size(trcs,2) != io.axis_lengths[2]
-            readframe!(io, frmtrcs, frmhdrs, sub2ind(io, hdrs[:,:,ifrm,ivol,ihyp]))
+            readframe_impl!(io, frmtrcs, frmhdrs, sub2ind(io, hdrs[:,:,ifrm,ivol,ihyp]))
             regularize!(io, frmtrcs, frmhdrs)
         end
         for itrc = 1:ntrcs
