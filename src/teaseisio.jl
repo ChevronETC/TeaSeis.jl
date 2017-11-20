@@ -1269,6 +1269,7 @@ end
 function readframehdrs_impl!(io::JSeis, hdrs::AbstractArray{UInt8,2}, frm::Int64)
     @assert io.mode != "w"
     fld = Int(fold_impl(io, frm))
+    map(i->set!(prop(io, stockprop[:TRC_TYPE]), hdrs, i, tracetype[:dead]), (fld+1):size(hdrs,2))
     if fld == 0
         return 0
     end

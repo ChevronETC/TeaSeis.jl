@@ -118,6 +118,34 @@ mkdir(rundir)
     @test size(jsopen(joinpath(rundir, "data-dummy.js"))) == (1,2,3)
     rm(jsopen(joinpath(rundir, "data-dummy.js")))
 
+    # repeated in-place read of frames with different folds
+    jscreate(joinpath(rundir, "data.js"), axis_lengths=[10,11,12])
+    io = jsopen(joinpath(rundir, "data.js"), "r+")
+    trcs,hdrs = allocframe(io)
+    for i = 1:size(io,2)
+        set!(props(io,2), hdrs, i, i)
+        set!(props(io,3), hdrs, i, 1)
+        set!(prop(io,stockprop[:TRC_TYPE]), hdrs, i, tracetype[:live])
+    end
+    writeframe(io, trcs, hdrs)
+    for i = 1:size(io,2)
+        set!(props(io,2), hdrs, i, i)
+        set!(props(io,3), hdrs, i, 2)
+        set!(prop(io,stockprop[:TRC_TYPE]), hdrs, i, i<6 ? tracetype[:live] : tracetype[:dead])
+    end
+    writeframe(io, trcs, hdrs)
+    trcs,hdrs = allocframe(io)
+    readframe!(io, trcs, hdrs, 1)
+    @test fold(io, hdrs) == 11
+    @test fold(io, 1) == 11
+    readframe!(io, trcs, hdrs, 2)
+    @test fold(io, hdrs) == 5
+    @test fold(io, 2) == 5
+    readframe!(io, trcs, hdrs, 3)
+    @test fold(io, hdrs) == 0
+    @test fold(io, 3) == 0
+    rm(jsopen(joinpath(rundir,"data.js")))
+
     @testset "lstrt=$(lstrt),lincrs=$(lincrs),sz=$(sz),second=$(second),T=$(T)" for lstrt in ([1,1,1,1,1], [10,20,30,40,50]), lincrs in ([1,1,1,1,1],[1,2,3,4,5]), sz in ([5,6,7], [5,6,7,8], [5,6,7,8,9]), second in (["."],["$(rundir)/second"]), T in (Float32, Int16)
         write(STDOUT, "lstrt=$(lstrt),lincrs=$(lincrs),sz=$(sz),second=$(second),T=$(T)\n")
         labls = ["SAMPLE", "TRACE", "FRAME", "VOLUME", "HYPRCUBE"]
