@@ -2,7 +2,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/ChevronETC/TeaSeis.jl/badge.svg?branch=master)](https://coveralls.io/github/ChevronETC/TeaSeis.jl?branch=master)
 
 <h1>TeaSeis.jl</h1>
-TeaSeis.jl is a Julia library for reading and writing JavaSeis files (The name `TeaSeis.jl` was chosen instead of `JavaSeis.jl` due to potential trademark issues).  The JavaSeis file format is used in various software projects including [SeisSpace](https://www.landmark.solutions/seisspace-promax).  The original library is written in [Java](http://sourceforge.net/projects/javaseis).  There are also [C++](http://www.jseisio.com) and [Python](https://github.com/asbjorn/pyjavaseis) implementations available.  Similar to the C++ library, TeaSeis.jl is a stripped down version of the original Java library.  In particular, the intent is to only supply methods for reading and writing from and to JavaSeis files.
+TeaSeis.jl is a Julia library for reading and writing JavaSeis files (The name `TeaSeis.jl` was chosen instead of `JavaSeis.jl` due to potential trademark issues).  The JavaSeis file format is used in various software projects including <a href=https://www.landmark.solutions/seisspace-promax>SeisSpace</a>.  The original library is written in <a href=http://sourceforge.net/projects/javaseis>Java</a>.  There are also <a href=http://www.jseisio.com>C++</a> and <a href=https://github.com/asbjorn/pyjavaseis>Python]</a> implementations available.  Similar to the C++ library, TeaSeis.jl is a stripped down version of the original Java library.  In particular, the intent is to only supply methods for reading and writing from and to JavaSeis files.
 
 ```@contents
 depth = 3
