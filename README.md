@@ -2,7 +2,7 @@
 [![Build Status](https://travis-ci.org/ChevronETC/TeaSeis.jl.svg?branch=master)](https://travis-ci.org/ChevronETC/TeaSeis.jl) [![Coverage Status](https://coveralls.io/repos/github/ChevronETC/TeaSeis.jl/badge.svg?branch=master)](https://coveralls.io/github/ChevronETC/TeaSeis.jl?branch=master)
 
 
-<h1>TeaSeis.jl</h1> TeaSeis.jl is a Julia library for reading and writing JavaSeis files (The name `TeaSeis.jl` was chosen instead of `JavaSeis.jl` due to potential trademark issues).  The JavaSeis file format is used in various software projects including [SeisSpace](https://www.landmark.solutions/seisspace-promax).  The original library is written in [Java](http://sourceforge.net/projects/javaseis).  There are also [C++](http://www.jseisio.com) and [Python](https://github.com/asbjorn/pyjavaseis) implementations available.  Similar to the C++ library, TeaSeis.jl is a stripped down version of the original Java library.  In particular, the intent is to only supply methods for reading and writing from and to JavaSeis files.
+<h1>TeaSeis.jl</h1> TeaSeis.jl is a Julia library for reading and writing JavaSeis files (The name `TeaSeis.jl` was chosen instead of `JavaSeis.jl` due to potential trademark issues).  The JavaSeis file format is used in various software projects including <a href=https://www.landmark.solutions/seisspace-promax>SeisSpace</a>.  The original library is written in <a href=http://sourceforge.net/projects/javaseis>Java</a>.  There are also <a href=http://www.jseisio.com>C++</a> and <a href=https://github.com/asbjorn/pyjavaseis>Python]</a> implementations available.  Similar to the C++ library, TeaSeis.jl is a stripped down version of the original Java library.  In particular, the intent is to only supply methods for reading and writing from and to JavaSeis files.
 
 - [Trademarks](README.md#Trademarks-1)
 - [License and copyright](README.md#License-and-copyright-1)
@@ -339,7 +339,7 @@ An array of custom trace properties.  These are in addition to a minimal set of 
 An array of custom data properties.  One property per data-set rather than one property per trace as in `properties` above.
 
 
-  * `geom::Geometry`<br>
+  * `geometry::Geometry`<br>
 
 
 An optional three point geometry can be embedded in the JavaSeis file.
@@ -742,14 +742,14 @@ TeaSeis.jl provides support for storing survey geometry using three-points to de
 
 
 ```julia
-geom = Geometry(min_inline, max_inline, min_crossline, max_crossline, x1, y1, x2, y2, x3, y3)
+geom = Geometry(u1=1,un=2,v1=1,vn=2,w1=1,wn=2,ux=1.0,uy=0.0,uz=0.0,vx=0.0,vy=1.0,vz=0.0,wx=0.0,wy=0.0,wz=1.0)
 ```
 
 
-where (x1,y1) is at the intersection of the inline and crossline axes.  (x2,y2) is the end of the first crossline, and (x3,y3) is the end of the first inline.  TeaSeis.jl does not provide any tools for using this geometry to manipulate trace coordinates.  I would recommend that this functionality be put into a separate package.
+where `(ox,oy,oz)` is the origin, `(ux,uy,uz)` is a vector to define the end of the `u-axis` (e.g. cross-line axis), `(vx,vy,vz)` is the end of the `v-axis` (e.g. the in-line axis), and `(wx,wy,wz)` is the end of the `w-axis` (e.g. the depth axis).  `(u1,un)` are the first and last bin indices along the `u-axis`, `(v1,vn)` are the first and last bin indices along the `v-axis`, and `(w1,wn)` are the first and last bin indices along the `w-axis`.  TeaSeis.jl does not provide any tools for using this geometry to manipulate trace coordinates.  I would recommend that this functionality be put into a separate package.
 
 
-<center>![](geometry.png)</center>
+<img src="geometry.png" alt="Geometry">
 
 
 <a id='Convenience-methods-and-dictionaries-1'></a>
@@ -800,6 +800,7 @@ isempty(io)            # returns true if the dataset is empty (without trace or 
 in(prop,io)            # returns true if the trace property `prop` exists in `io` --  `prop` can be of types `::TraceProperty`, `::TracePropertyDef`, or `::String`
 dataproperty(io,nm)    # returns the value held in the data property: `nm::String`
 hasdataproperty(io,nm) # returns true if the data property corresponding to label `nm::String` is in `io::JSeis`
+geometry(io)           # returns `Geometry`, the stored geometry of the dataset.  If no geometry is stored, `nothing` is returned
 ```
 
 
@@ -819,33 +820,35 @@ copy!(io, hdrs, io1, hdrs1) # copy values from `hdrs1::Array{UInt8,2}` to `hdrs:
 
 # API
 
+- [`TeaSeis.Geometry`](README.md#TeaSeis.Geometry-Tuple{})
 - [`Base.Filesystem.cp`](README.md#Base.Filesystem.cp-Tuple{TeaSeis.JSeis,AbstractString})
 - [`Base.Filesystem.mv`](README.md#Base.Filesystem.mv-Tuple{TeaSeis.JSeis,AbstractString})
 - [`Base.Filesystem.rm`](README.md#Base.Filesystem.rm-Tuple{TeaSeis.JSeis})
 - [`Base.close`](README.md#Base.close-Tuple{TeaSeis.JSeis})
 - [`Base.copy!`](README.md#Base.copy!-Tuple{TeaSeis.JSeis,AbstractArray{UInt8,2},TeaSeis.JSeis,AbstractArray{UInt8,2}})
 - [`Base.empty!`](README.md#Base.empty!-Tuple{TeaSeis.JSeis})
-- [`Base.get`](README.md#Base.get-Tuple{TeaSeis.TraceProperty{T<:Number},Array{UInt8,1}})
 - [`Base.get`](README.md#Base.get-Tuple{TeaSeis.TraceProperty,AbstractArray{UInt8,2},Int64})
-- [`Base.in`](README.md#Base.in-Tuple{Union{String,TeaSeis.TracePropertyDef,TeaSeis.TraceProperty},TeaSeis.JSeis})
+- [`Base.get`](README.md#Base.get-Union{Tuple{T}, Tuple{TeaSeis.TraceProperty{T},Array{UInt8,1}}} where T<:Number)
+- [`Base.in`](README.md#Base.in-Tuple{Union{String, TeaSeis.TraceProperty, TeaSeis.TracePropertyDef},TeaSeis.JSeis})
 - [`Base.ind2sub`](README.md#Base.ind2sub-Tuple{TeaSeis.JSeis,Int64})
 - [`Base.isempty`](README.md#Base.isempty-Tuple{TeaSeis.JSeis})
 - [`Base.length`](README.md#Base.length-Tuple{TeaSeis.JSeis})
 - [`Base.ndims`](README.md#Base.ndims-Tuple{TeaSeis.JSeis})
-- [`Base.read`](README.md#Base.read-Tuple{TeaSeis.JSeis,Union{Colon,Int64,Range{Int64}},Union{Colon,Int64,Range{Int64}},Vararg{Union{Colon,Int64,Range{Int64}},N}})
-- [`Base.read!`](README.md#Base.read!-Tuple{TeaSeis.JSeis,AbstractArray{Float32,N},AbstractArray{UInt8,N},Union{Colon,Int64,Range{Int64}},Union{Colon,Int64,Range{Int64}},Vararg{Union{Colon,Int64,Range{Int64}},N}})
+- [`Base.read`](README.md#Base.read-Tuple{TeaSeis.JSeis,Union{Colon, Int64, Range{Int64}},Union{Colon, Int64, Range{Int64}},Vararg{Union{Colon, Int64, Range{Int64}},N} where N})
+- [`Base.read!`](README.md#Base.read!-Tuple{TeaSeis.JSeis,AbstractArray{Float32,N} where N,AbstractArray{UInt8,N} where N,Union{Colon, Int64, Range{Int64}},Union{Colon, Int64, Range{Int64}},Vararg{Union{Colon, Int64, Range{Int64}},N} where N})
 - [`Base.size`](README.md#Base.size-Tuple{TeaSeis.JSeis})
 - [`Base.size`](README.md#Base.size-Tuple{TeaSeis.JSeis,Int64})
+- [`Base.write`](README.md#Base.write-Tuple{TeaSeis.JSeis,AbstractArray{Float32,N} where N,Union{Colon, Int64, Range{Int64}},Union{Colon, Int64, Range{Int64}},Vararg{Union{Colon, Int64, Range{Int64}},N} where N})
 - [`Base.write`](README.md#Base.write)
-- [`Base.write`](README.md#Base.write-Tuple{TeaSeis.JSeis,AbstractArray{Float32,N},Union{Colon,Int64,Range{Int64}},Union{Colon,Int64,Range{Int64}},Vararg{Union{Colon,Int64,Range{Int64}},N}})
 - [`TeaSeis.allocframe`](README.md#TeaSeis.allocframe-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.allocframehdrs`](README.md#TeaSeis.allocframehdrs-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.allocframetrcs`](README.md#TeaSeis.allocframetrcs-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.dataproperty`](README.md#TeaSeis.dataproperty-Tuple{TeaSeis.JSeis,String})
-- [`TeaSeis.domains`](README.md#TeaSeis.domains-Tuple{TeaSeis.JSeis,Int64})
 - [`TeaSeis.domains`](README.md#TeaSeis.domains-Tuple{TeaSeis.JSeis})
+- [`TeaSeis.domains`](README.md#TeaSeis.domains-Tuple{TeaSeis.JSeis,Int64})
+- [`TeaSeis.fold`](README.md#TeaSeis.fold-Tuple{TeaSeis.JSeis,Vararg{Int64,N} where N})
 - [`TeaSeis.fold`](README.md#TeaSeis.fold-Tuple{TeaSeis.JSeis,Array{UInt8,2}})
-- [`TeaSeis.fold`](README.md#TeaSeis.fold-Tuple{TeaSeis.JSeis,Vararg{Int64,N}})
+- [`TeaSeis.geometry`](README.md#TeaSeis.geometry-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.hasdataproperty`](README.md#TeaSeis.hasdataproperty-Tuple{Any,Any})
 - [`TeaSeis.jscreate`](README.md#TeaSeis.jscreate-Tuple{String})
 - [`TeaSeis.jsopen`](README.md#TeaSeis.jsopen-Tuple{String,String})
@@ -857,8 +860,8 @@ copy!(io, hdrs, io1, hdrs1) # copy values from `hdrs1::Array{UInt8,2}` to `hdrs:
 - [`TeaSeis.lincs`](README.md#TeaSeis.lincs-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.lrange`](README.md#TeaSeis.lrange-Tuple{TeaSeis.JSeis,Int64})
 - [`TeaSeis.lrange`](README.md#TeaSeis.lrange-Tuple{TeaSeis.JSeis})
-- [`TeaSeis.lstarts`](README.md#TeaSeis.lstarts-Tuple{TeaSeis.JSeis,Int64})
 - [`TeaSeis.lstarts`](README.md#TeaSeis.lstarts-Tuple{TeaSeis.JSeis})
+- [`TeaSeis.lstarts`](README.md#TeaSeis.lstarts-Tuple{TeaSeis.JSeis,Int64})
 - [`TeaSeis.pincs`](README.md#TeaSeis.pincs-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.pincs`](README.md#TeaSeis.pincs-Tuple{TeaSeis.JSeis,Int64})
 - [`TeaSeis.prop`](README.md#TeaSeis.prop-Tuple{TeaSeis.JSeis,String})
@@ -866,24 +869,24 @@ copy!(io, hdrs, io1, hdrs1) # copy values from `hdrs1::Array{UInt8,2}` to `hdrs:
 - [`TeaSeis.propdefs`](README.md#TeaSeis.propdefs-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.props`](README.md#TeaSeis.props-Tuple{TeaSeis.JSeis,Int64})
 - [`TeaSeis.props`](README.md#TeaSeis.props-Tuple{TeaSeis.JSeis})
-- [`TeaSeis.pstarts`](README.md#TeaSeis.pstarts-Tuple{TeaSeis.JSeis,Int64})
 - [`TeaSeis.pstarts`](README.md#TeaSeis.pstarts-Tuple{TeaSeis.JSeis})
-- [`TeaSeis.readframe`](README.md#TeaSeis.readframe-Tuple{TeaSeis.JSeis,Vararg{Int64,N}})
-- [`TeaSeis.readframe!`](README.md#TeaSeis.readframe!-Tuple{TeaSeis.JSeis,AbstractArray{Float32,2},AbstractArray{UInt8,2},Vararg{Int64,N}})
-- [`TeaSeis.readframehdrs`](README.md#TeaSeis.readframehdrs-Tuple{TeaSeis.JSeis,Vararg{Int64,N}})
-- [`TeaSeis.readframehdrs!`](README.md#TeaSeis.readframehdrs!-Tuple{TeaSeis.JSeis,AbstractArray{UInt8,2},Vararg{Int64,N}})
-- [`TeaSeis.readframetrcs`](README.md#TeaSeis.readframetrcs-Tuple{TeaSeis.JSeis,Vararg{Int64,N}})
-- [`TeaSeis.readframetrcs!`](README.md#TeaSeis.readframetrcs!-Tuple{TeaSeis.JSeis,AbstractArray{Float32,2},Vararg{Int64,N}})
-- [`TeaSeis.readhdrs`](README.md#TeaSeis.readhdrs-Tuple{TeaSeis.JSeis,Union{Colon,Int64,Range{Int64}},Vararg{Union{Colon,Int64,Range{Int64}},N}})
-- [`TeaSeis.readhdrs!`](README.md#TeaSeis.readhdrs!-Tuple{TeaSeis.JSeis,AbstractArray{UInt8,N},Union{Colon,Int64,Range{Int64}},Vararg{Union{Colon,Int64,Range{Int64}},N}})
-- [`TeaSeis.readtrcs`](README.md#TeaSeis.readtrcs-Tuple{TeaSeis.JSeis,Union{Colon,Int64,Range{Int64}},Union{Colon,Int64,Range{Int64}},Vararg{Union{Colon,Int64,Range{Int64}},N}})
-- [`TeaSeis.readtrcs!`](README.md#TeaSeis.readtrcs!-Tuple{TeaSeis.JSeis,AbstractArray{Float32,N},Union{Colon,Int64,Range{Int64}},Union{Colon,Int64,Range{Int64}},Vararg{Union{Colon,Int64,Range{Int64}},N}})
+- [`TeaSeis.pstarts`](README.md#TeaSeis.pstarts-Tuple{TeaSeis.JSeis,Int64})
+- [`TeaSeis.readframe`](README.md#TeaSeis.readframe-Tuple{TeaSeis.JSeis,Vararg{Int64,N} where N})
+- [`TeaSeis.readframe!`](README.md#TeaSeis.readframe!-Tuple{TeaSeis.JSeis,AbstractArray{Float32,2},AbstractArray{UInt8,2},Vararg{Int64,N} where N})
+- [`TeaSeis.readframehdrs`](README.md#TeaSeis.readframehdrs-Tuple{TeaSeis.JSeis,Vararg{Int64,N} where N})
+- [`TeaSeis.readframehdrs!`](README.md#TeaSeis.readframehdrs!-Tuple{TeaSeis.JSeis,AbstractArray{UInt8,2},Vararg{Int64,N} where N})
+- [`TeaSeis.readframetrcs`](README.md#TeaSeis.readframetrcs-Tuple{TeaSeis.JSeis,Vararg{Int64,N} where N})
+- [`TeaSeis.readframetrcs!`](README.md#TeaSeis.readframetrcs!-Tuple{TeaSeis.JSeis,AbstractArray{Float32,2},Vararg{Int64,N} where N})
+- [`TeaSeis.readhdrs`](README.md#TeaSeis.readhdrs-Tuple{TeaSeis.JSeis,Union{Colon, Int64, Range{Int64}},Vararg{Union{Colon, Int64, Range{Int64}},N} where N})
+- [`TeaSeis.readhdrs!`](README.md#TeaSeis.readhdrs!-Tuple{TeaSeis.JSeis,AbstractArray{UInt8,N} where N,Union{Colon, Int64, Range{Int64}},Vararg{Union{Colon, Int64, Range{Int64}},N} where N})
+- [`TeaSeis.readtrcs`](README.md#TeaSeis.readtrcs-Tuple{TeaSeis.JSeis,Union{Colon, Int64, Range{Int64}},Union{Colon, Int64, Range{Int64}},Vararg{Union{Colon, Int64, Range{Int64}},N} where N})
+- [`TeaSeis.readtrcs!`](README.md#TeaSeis.readtrcs!-Tuple{TeaSeis.JSeis,AbstractArray{Float32,N} where N,Union{Colon, Int64, Range{Int64}},Union{Colon, Int64, Range{Int64}},Vararg{Union{Colon, Int64, Range{Int64}},N} where N})
 - [`TeaSeis.regularize!`](README.md#TeaSeis.regularize!-Tuple{TeaSeis.JSeis,Array{Float32,2},Array{UInt8,2}})
-- [`TeaSeis.set!`](README.md#TeaSeis.set!-Tuple{TeaSeis.TraceProperty,AbstractArray{UInt8,2},Int64,T<:Number})
-- [`TeaSeis.units`](README.md#TeaSeis.units-Tuple{TeaSeis.JSeis})
+- [`TeaSeis.set!`](README.md#TeaSeis.set!-Union{Tuple{T}, Tuple{TeaSeis.TraceProperty,AbstractArray{UInt8,2},Int64,T}} where T<:Number)
 - [`TeaSeis.units`](README.md#TeaSeis.units-Tuple{TeaSeis.JSeis,Int64})
+- [`TeaSeis.units`](README.md#TeaSeis.units-Tuple{TeaSeis.JSeis})
 - [`TeaSeis.writeframe`](README.md#TeaSeis.writeframe-Tuple{TeaSeis.JSeis,AbstractArray{Float32,2},AbstractArray{UInt8,2},Int64})
-- [`TeaSeis.writeframe`](README.md#TeaSeis.writeframe-Tuple{TeaSeis.JSeis,AbstractArray{Float32,2},Vararg{Int64,N}})
+- [`TeaSeis.writeframe`](README.md#TeaSeis.writeframe-Tuple{TeaSeis.JSeis,AbstractArray{Float32,2},Vararg{Int64,N} where N})
 
 <a id='TeaSeis.allocframe-Tuple{TeaSeis.JSeis}' href='#TeaSeis.allocframe-Tuple{TeaSeis.JSeis}'>#</a>
 **`TeaSeis.allocframe`** &mdash; *Method*.
@@ -896,6 +899,9 @@ allocframe(io)
 
 Allocate memory for one frame of JavaSeis dataset.  Returns `(Array{Float32,2},Array{UInt8,2})`. For example, `trcs, hdrs = allocframe(jsopen("data.js"))`.
 
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L1212-L1217' class='documenter-source'>source</a><br>
+
 <a id='TeaSeis.allocframehdrs-Tuple{TeaSeis.JSeis}' href='#TeaSeis.allocframehdrs-Tuple{TeaSeis.JSeis}'>#</a>
 **`TeaSeis.allocframehdrs`** &mdash; *Method*.
 
@@ -905,6 +911,9 @@ allocframehdrs(io)
 
 Allocate memory for headers for one frame of JavaSeis dataset.  Returns `Array{UInt8,2}`. For example, `hdrs = allocframehdrs(jsopen("data.js"))`.
 
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L1219-L1224' class='documenter-source'>source</a><br>
+
 <a id='TeaSeis.allocframetrcs-Tuple{TeaSeis.JSeis}' href='#TeaSeis.allocframetrcs-Tuple{TeaSeis.JSeis}'>#</a>
 **`TeaSeis.allocframetrcs`** &mdash; *Method*.
 
@@ -913,6 +922,9 @@ Allocate memory for headers for one frame of JavaSeis dataset.  Returns `Array{U
 allocframetrcs(io)
 
 Allocate memory for traces for one frame of JavaSeis dataset.  Returns `Array{Float32,2}`. For example, `trcs = allocframetrcs(jsopen("data.js"))`.
+
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L1226-L1231' class='documenter-source'>source</a><br>
 
 <a id='TeaSeis.dataproperty-Tuple{TeaSeis.JSeis,String}' href='#TeaSeis.dataproperty-Tuple{TeaSeis.JSeis,String}'>#</a>
 **`TeaSeis.dataproperty`** &mdash; *Method*.
@@ -925,6 +937,9 @@ dataproperty(io, label)
 
 Get a data property (data properties are per file, rather than per trace) from `io::JSeis` with label `label::String`.  For example, `dataproperty(jsopen("data.js"), "FREQUENCY")`.
 
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L1182-L1187' class='documenter-source'>source</a><br>
+
 <a id='TeaSeis.domains-Tuple{TeaSeis.JSeis,Int64}' href='#TeaSeis.domains-Tuple{TeaSeis.JSeis,Int64}'>#</a>
 **`TeaSeis.domains`** &mdash; *Method*.
 
@@ -935,6 +950,9 @@ domains(io, i)
 ```
 
 Returns the domain of the ith dimension of the framework axes of the JavaSeis dataset corresponding to `io::JSeis`.
+
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L2449-L2454' class='documenter-source'>source</a><br>
 
 <a id='TeaSeis.domains-Tuple{TeaSeis.JSeis}' href='#TeaSeis.domains-Tuple{TeaSeis.JSeis}'>#</a>
 **`TeaSeis.domains`** &mdash; *Method*.
@@ -947,6 +965,9 @@ domains(io)
 
 Returns the domains of the framework axes of the JavaSeis dataset corresponding to `io::JSeis`.
 
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L2442-L2447' class='documenter-source'>source</a><br>
+
 <a id='TeaSeis.fold-Tuple{TeaSeis.JSeis,Array{UInt8,2}}' href='#TeaSeis.fold-Tuple{TeaSeis.JSeis,Array{UInt8,2}}'>#</a>
 **`TeaSeis.fold`** &mdash; *Method*.
 
@@ -958,7 +979,10 @@ fold(io, hdrs)
 
 Compute the fold of a frame where io is JSeis corresponding to the dataset, and hdrs are the headers for the frame. For example: `io=jsopen("file.js"); fold(io, readframehdrs(io,1))`
 
-<a id='TeaSeis.fold-Tuple{TeaSeis.JSeis,Vararg{Int64,N}}' href='#TeaSeis.fold-Tuple{TeaSeis.JSeis,Vararg{Int64,N}}'>#</a>
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L926-L931' class='documenter-source'>source</a><br>
+
+<a id='TeaSeis.fold-Tuple{TeaSeis.JSeis,Vararg{Int64,N} where N}' href='#TeaSeis.fold-Tuple{TeaSeis.JSeis,Vararg{Int64,N} where N}'>#</a>
 **`TeaSeis.fold`** &mdash; *Method*.
 
 
@@ -968,6 +992,23 @@ fold(io, idx...)
 ```
 
 Compute the fold of a frame where idx is the frame/volume/hypercube indices.  For example, `fold(jsopen("file.js"),1)` for a 3D dataset, `fold(jsopen("file.js",1,2))` for a 4D dataset, and `fold(jsopen("file.js"),1,2,3)` for a 5D dataset.
+
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L937-L942' class='documenter-source'>source</a><br>
+
+<a id='TeaSeis.geometry-Tuple{TeaSeis.JSeis}' href='#TeaSeis.geometry-Tuple{TeaSeis.JSeis}'>#</a>
+**`TeaSeis.geometry`** &mdash; *Method*.
+
+
+
+```
+geometry(io)
+```
+
+If `io::JSeis` contains a geometry definition, then return a geometry of type `Geometry`.  Otherwise, return `nothing`.
+
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L2541-L2546' class='documenter-source'>source</a><br>
 
 <a id='TeaSeis.hasdataproperty-Tuple{Any,Any}' href='#TeaSeis.hasdataproperty-Tuple{Any,Any}'>#</a>
 **`TeaSeis.hasdataproperty`** &mdash; *Method*.
@@ -980,6 +1021,9 @@ hasdataproperty(io, label)
 
 return true if `io::JSeis` contains the data property corresponding to `label`.  Otherwise, return false.
 
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L1197-L1201' class='documenter-source'>source</a><br>
+
 <a id='TeaSeis.jscreate-Tuple{String}' href='#TeaSeis.jscreate-Tuple{String}'>#</a>
 **`TeaSeis.jscreate`** &mdash; *Method*.
 
@@ -990,6 +1034,9 @@ jscreate(filename)
 ```
 
 Create a JavaSeis dataset without opening it.  This method has the same optional arguments as `jsopen`
+
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L363-L367' class='documenter-source'>source</a><br>
 
 <a id='TeaSeis.jsopen-Tuple{String,String}' href='#TeaSeis.jsopen-Tuple{String,String}'>#</a>
 **`TeaSeis.jsopen`** &mdash; *Method*.
@@ -1022,13 +1069,16 @@ If `"w"` is used for the value of `mode`, then the `axis_lengths` named paramete
   * `axis_pincs::Array{Float64}` Physical increments for each axis.  If not set, then `1.0` is used for the physical increments of each axis.
   * `data_properties::Array{DataProperty}` An array of custom trace properties.  These are in addition to the properties listed in `SSPROPS.md`.
   * `properties::Array{TracePropertyDef}` An array of custom data properties.  One property per data-set rather than one property per trace as in `properties` above.
-  * `geom::Geometry` An optional three point geometry can be embedded in the JavaSeis file.
+  * `geometry::Geometry` An optional three point geometry can be embedded in the JavaSeis file.
   * `secondaries::Array{String}` An array of file-system locations used to store the file extents.  If not set, then *primary* storage is used.
   * `nextents::Int64` The number of file-extents used to store the data.  If not set, then a heuristic is used to choose the number of extents.  The heuristic is: min(256,10 + (FRAMEWORK_SIZE)/(2*1024^3)).
   * `properties_add::Array{TracePropertyDef}` When `similarto` is specified, use this to add trace properties to those already existing in the `similarto` file.
   * `properties_rm::Array{TracePropertyDef}` When `similarto` is specified, use this to remove trace properties to those already existing in the `similarto` file.
   * `dataproperties_add::Array{DataProperty}` When `similarto` is specfied, use this to add dataset properties to those aloready existing in the `similarto` file.
   * `dataproperties_rm::Array{DataProperty}` When `similarto` is specified, use this to remove dataset properties to those already existing in the `similarto` file.
+
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L32-L66' class='documenter-source'>source</a><br>
 
 <a id='TeaSeis.jsopen-Tuple{String}' href='#TeaSeis.jsopen-Tuple{String}'>#</a>
 **`TeaSeis.jsopen`** &mdash; *Method*.
@@ -1041,6 +1091,9 @@ jsopen(filename)
 
 Equivalent to `jsopen(filename, "r")`
 
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L356-L360' class='documenter-source'>source</a><br>
+
 <a id='TeaSeis.labels-Tuple{TeaSeis.JSeis,Int64}' href='#TeaSeis.labels-Tuple{TeaSeis.JSeis,Int64}'>#</a>
 **`TeaSeis.labels`** &mdash; *Method*.
 
@@ -1051,6 +1104,9 @@ labels(io, i)
 ```
 
 Returns the string label of the ith framework axis of the JavaSeis dataset corresponding to `io::JSeis`.
+
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L2393-L2398' class='documenter-source'>source</a><br>
 
 <a id='TeaSeis.labels-Tuple{TeaSeis.JSeis}' href='#TeaSeis.labels-Tuple{TeaSeis.JSeis}'>#</a>
 **`TeaSeis.labels`** &mdash; *Method*.
@@ -1063,6 +1119,9 @@ labels(io)
 
 Returns the string labels corresponding to the framework axes of the JavaSeis dataset corresponding to `io::JSeis`.
 
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L2386-L2391' class='documenter-source'>source</a><br>
+
 <a id='TeaSeis.leftjustify!-Tuple{TeaSeis.JSeis,Array{Float32,2},Array{UInt8,2}}' href='#TeaSeis.leftjustify!-Tuple{TeaSeis.JSeis,Array{Float32,2},Array{UInt8,2}}'>#</a>
 **`TeaSeis.leftjustify!`** &mdash; *Method*.
 
@@ -1073,6 +1132,9 @@ leftjustify(io, trcs, hdrs)
 ```
 
 Left justify all live (non-dead) traces in a frame, moving them to the beginning of `trcs` and `hdrs`.  See also `regularize!`
+
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L2258-L2263' class='documenter-source'>source</a><br>
 
 <a id='TeaSeis.lincs-Tuple{TeaSeis.JSeis,Int64}' href='#TeaSeis.lincs-Tuple{TeaSeis.JSeis,Int64}'>#</a>
 **`TeaSeis.lincs`** &mdash; *Method*.
@@ -1085,6 +1147,9 @@ lincs(io,i)
 
 Returns the logical increment of the framework axes for dimension `i` of the JavaSeis dataset corresponding to `io::JSeis`.
 
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L2505-L2510' class='documenter-source'>source</a><br>
+
 <a id='TeaSeis.lincs-Tuple{TeaSeis.JSeis}' href='#TeaSeis.lincs-Tuple{TeaSeis.JSeis}'>#</a>
 **`TeaSeis.lincs`** &mdash; *Method*.
 
@@ -1095,6 +1160,9 @@ lincs(io)
 ```
 
 Returns the logical increments of the framework axes of the JavaSeis dataset corresponding to `io::JSeis`.
+
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L2498-L2503' class='documenter-source'>source</a><br>
 
 <a id='TeaSeis.lrange-Tuple{TeaSeis.JSeis,Int64}' href='#TeaSeis.lrange-Tuple{TeaSeis.JSeis,Int64}'>#</a>
 **`TeaSeis.lrange`** &mdash; *Method*.
@@ -1107,6 +1175,9 @@ lrange(io, i)
 
 Returns the logical range of the framework axes for dimension `i` of the JavaSeis dataset corresponding to `io::JSeis`.
 
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L2519-L2524' class='documenter-source'>source</a><br>
+
 <a id='TeaSeis.lrange-Tuple{TeaSeis.JSeis}' href='#TeaSeis.lrange-Tuple{TeaSeis.JSeis}'>#</a>
 **`TeaSeis.lrange`** &mdash; *Method*.
 
@@ -1117,6 +1188,9 @@ lrange(io)
 ```
 
 Returns the logical ranges of the framework axes of the JavaSeis dataset corresponding to `io::JSeis`.
+
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L2512-L2517' class='documenter-source'>source</a><br>
 
 <a id='TeaSeis.lstarts-Tuple{TeaSeis.JSeis,Int64}' href='#TeaSeis.lstarts-Tuple{TeaSeis.JSeis,Int64}'>#</a>
 **`TeaSeis.lstarts`** &mdash; *Method*.
@@ -1129,6 +1203,9 @@ lstarts(io,i)
 
 Returns the logical start of the framework axes for dimension `i` of the JavaSeis dataset corresponding to `io::JSeis`.
 
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L2491-L2496' class='documenter-source'>source</a><br>
+
 <a id='TeaSeis.lstarts-Tuple{TeaSeis.JSeis}' href='#TeaSeis.lstarts-Tuple{TeaSeis.JSeis}'>#</a>
 **`TeaSeis.lstarts`** &mdash; *Method*.
 
@@ -1139,6 +1216,9 @@ lstarts(io)
 ```
 
 Returns the logical start of the framework axes of the JavaSeis dataset corresponding to `io::JSeis`.
+
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L2484-L2489' class='documenter-source'>source</a><br>
 
 <a id='TeaSeis.pincs-Tuple{TeaSeis.JSeis,Int64}' href='#TeaSeis.pincs-Tuple{TeaSeis.JSeis,Int64}'>#</a>
 **`TeaSeis.pincs`** &mdash; *Method*.
@@ -1151,6 +1231,9 @@ pincs(io, i)
 
 Returns the physical increments of the framework axes for dimension `i` of the JavaSeis dataset corresponding to `io::JSeis`.
 
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L2477-L2482' class='documenter-source'>source</a><br>
+
 <a id='TeaSeis.pincs-Tuple{TeaSeis.JSeis}' href='#TeaSeis.pincs-Tuple{TeaSeis.JSeis}'>#</a>
 **`TeaSeis.pincs`** &mdash; *Method*.
 
@@ -1161,6 +1244,9 @@ pincs(io)
 ```
 
 Returns the physical increments of the framework axes of the JavaSeis dataset corresponding to `io::JSeis`.
+
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L2470-L2475' class='documenter-source'>source</a><br>
 
 <a id='TeaSeis.prop-Tuple{TeaSeis.JSeis,String}' href='#TeaSeis.prop-Tuple{TeaSeis.JSeis,String}'>#</a>
 **`TeaSeis.prop`** &mdash; *Method*.
@@ -1179,6 +1265,9 @@ p = prop(io, "REC_X")            # using an `String`
 p = prop(io, stockprop[:REC_X])  # using a `TracePropertyDef`
 ```
 
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L1107-L1118' class='documenter-source'>source</a><br>
+
 <a id='TeaSeis.propdefs-Tuple{TeaSeis.JSeis,Int64}' href='#TeaSeis.propdefs-Tuple{TeaSeis.JSeis,Int64}'>#</a>
 **`TeaSeis.propdefs`** &mdash; *Method*.
 
@@ -1189,6 +1278,9 @@ propdefs(io, i)
 ```
 
 Returns the property definition of the ith framework axis of the JavaSeis dataset corresponding to `io::JSeis`.
+
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L2407-L2412' class='documenter-source'>source</a><br>
 
 <a id='TeaSeis.propdefs-Tuple{TeaSeis.JSeis}' href='#TeaSeis.propdefs-Tuple{TeaSeis.JSeis}'>#</a>
 **`TeaSeis.propdefs`** &mdash; *Method*.
@@ -1201,6 +1293,9 @@ propdefs(io)
 
 Returns the property definitions of the framework axes of the JavaSeis dataset corresponding to `io::JSeis`.
 
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L2400-L2405' class='documenter-source'>source</a><br>
+
 <a id='TeaSeis.props-Tuple{TeaSeis.JSeis,Int64}' href='#TeaSeis.props-Tuple{TeaSeis.JSeis,Int64}'>#</a>
 **`TeaSeis.props`** &mdash; *Method*.
 
@@ -1211,6 +1306,9 @@ props(io, i)
 ```
 
 Returns the trace property of the ith framework axis of the JavaSeis dataset corresponding to `io::JSeis`.
+
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L2421-L2426' class='documenter-source'>source</a><br>
 
 <a id='TeaSeis.props-Tuple{TeaSeis.JSeis}' href='#TeaSeis.props-Tuple{TeaSeis.JSeis}'>#</a>
 **`TeaSeis.props`** &mdash; *Method*.
@@ -1223,6 +1321,9 @@ props(io)
 
 Returns the trace properties of the framework axes of the JavaSeis dataset corresponding to `io::JSeis`.
 
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L2414-L2419' class='documenter-source'>source</a><br>
+
 <a id='TeaSeis.pstarts-Tuple{TeaSeis.JSeis,Int64}' href='#TeaSeis.pstarts-Tuple{TeaSeis.JSeis,Int64}'>#</a>
 **`TeaSeis.pstarts`** &mdash; *Method*.
 
@@ -1233,6 +1334,9 @@ pstarts(io, i)
 ```
 
 Returns the physical start of the ith dimension of the framework axes of the JavaSeis dataset corresponding to `io::JSeis`.
+
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L2463-L2468' class='documenter-source'>source</a><br>
 
 <a id='TeaSeis.pstarts-Tuple{TeaSeis.JSeis}' href='#TeaSeis.pstarts-Tuple{TeaSeis.JSeis}'>#</a>
 **`TeaSeis.pstarts`** &mdash; *Method*.
@@ -1245,7 +1349,10 @@ pstarts(io)
 
 Returns the physical start of the framework axes of the JavaSeis dataset corresponding to `io::JSeis`.
 
-<a id='TeaSeis.readframe!-Tuple{TeaSeis.JSeis,AbstractArray{Float32,2},AbstractArray{UInt8,2},Vararg{Int64,N}}' href='#TeaSeis.readframe!-Tuple{TeaSeis.JSeis,AbstractArray{Float32,2},AbstractArray{UInt8,2},Vararg{Int64,N}}'>#</a>
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L2456-L2461' class='documenter-source'>source</a><br>
+
+<a id='TeaSeis.readframe!-Tuple{TeaSeis.JSeis,AbstractArray{Float32,2},AbstractArray{UInt8,2},Vararg{Int64,N} where N}' href='#TeaSeis.readframe!-Tuple{TeaSeis.JSeis,AbstractArray{Float32,2},AbstractArray{UInt8,2},Vararg{Int64,N} where N}'>#</a>
 **`TeaSeis.readframe!`** &mdash; *Method*.
 
 
@@ -1283,7 +1390,10 @@ frm_idx, vol_idx, hyp_idx = 1, 1, 1
 readframe!(io, trcs, hdrs, frm_idx, vol_idx, hyp_idx)
 ```
 
-<a id='TeaSeis.readframe-Tuple{TeaSeis.JSeis,Vararg{Int64,N}}' href='#TeaSeis.readframe-Tuple{TeaSeis.JSeis,Vararg{Int64,N}}'>#</a>
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L1302-L1334' class='documenter-source'>source</a><br>
+
+<a id='TeaSeis.readframe-Tuple{TeaSeis.JSeis,Vararg{Int64,N} where N}' href='#TeaSeis.readframe-Tuple{TeaSeis.JSeis,Vararg{Int64,N} where N}'>#</a>
 **`TeaSeis.readframe`** &mdash; *Method*.
 
 
@@ -1315,7 +1425,10 @@ frm_idx, vol_idx, hyp_idx = 1, 1, 1
 trcs, hdrs = readframe(jsopen("data_5D.js"), frm_idx, vol_idx, hyp_idx)
 ```
 
-<a id='TeaSeis.readframehdrs!-Tuple{TeaSeis.JSeis,AbstractArray{UInt8,2},Vararg{Int64,N}}' href='#TeaSeis.readframehdrs!-Tuple{TeaSeis.JSeis,AbstractArray{UInt8,2},Vararg{Int64,N}}'>#</a>
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L1337-L1363' class='documenter-source'>source</a><br>
+
+<a id='TeaSeis.readframehdrs!-Tuple{TeaSeis.JSeis,AbstractArray{UInt8,2},Vararg{Int64,N} where N}' href='#TeaSeis.readframehdrs!-Tuple{TeaSeis.JSeis,AbstractArray{UInt8,2},Vararg{Int64,N} where N}'>#</a>
 **`TeaSeis.readframehdrs!`** &mdash; *Method*.
 
 
@@ -1353,7 +1466,10 @@ frm_idx, vol_idx, hyp_idx = 1, 1, 1
 readframehdrs!(io, hdrs, frm_idx, vol_idx, hyp_idx)
 ```
 
-<a id='TeaSeis.readframehdrs-Tuple{TeaSeis.JSeis,Vararg{Int64,N}}' href='#TeaSeis.readframehdrs-Tuple{TeaSeis.JSeis,Vararg{Int64,N}}'>#</a>
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L1430-L1462' class='documenter-source'>source</a><br>
+
+<a id='TeaSeis.readframehdrs-Tuple{TeaSeis.JSeis,Vararg{Int64,N} where N}' href='#TeaSeis.readframehdrs-Tuple{TeaSeis.JSeis,Vararg{Int64,N} where N}'>#</a>
 **`TeaSeis.readframehdrs`** &mdash; *Method*.
 
 
@@ -1383,7 +1499,10 @@ frm_idx, vol_idx, hyp_idx = 1, 1, 1
 hdrs = readframehdrs(jsopen("data_5D.js"), frm_idx, vol_idx, hyp_idx)
 ```
 
-<a id='TeaSeis.readframetrcs!-Tuple{TeaSeis.JSeis,AbstractArray{Float32,2},Vararg{Int64,N}}' href='#TeaSeis.readframetrcs!-Tuple{TeaSeis.JSeis,AbstractArray{Float32,2},Vararg{Int64,N}}'>#</a>
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L1465-L1491' class='documenter-source'>source</a><br>
+
+<a id='TeaSeis.readframetrcs!-Tuple{TeaSeis.JSeis,AbstractArray{Float32,2},Vararg{Int64,N} where N}' href='#TeaSeis.readframetrcs!-Tuple{TeaSeis.JSeis,AbstractArray{Float32,2},Vararg{Int64,N} where N}'>#</a>
 **`TeaSeis.readframetrcs!`** &mdash; *Method*.
 
 
@@ -1421,7 +1540,10 @@ frm_idx, vol_idx, hyp_idx = 1, 1, 1
 readframetrcs!(io, trcs, frm_idx, vol_idx, hyp_idx)
 ```
 
-<a id='TeaSeis.readframetrcs-Tuple{TeaSeis.JSeis,Vararg{Int64,N}}' href='#TeaSeis.readframetrcs-Tuple{TeaSeis.JSeis,Vararg{Int64,N}}'>#</a>
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L1366-L1398' class='documenter-source'>source</a><br>
+
+<a id='TeaSeis.readframetrcs-Tuple{TeaSeis.JSeis,Vararg{Int64,N} where N}' href='#TeaSeis.readframetrcs-Tuple{TeaSeis.JSeis,Vararg{Int64,N} where N}'>#</a>
 **`TeaSeis.readframetrcs`** &mdash; *Method*.
 
 
@@ -1453,7 +1575,10 @@ frm_idx, vol_idx, hyp_idx = 1, 1, 1
 trcs = readframetrcs(jsopen("data_5D.js"), frm_idx, vol_idx, hyp_idx)
 ```
 
-<a id='TeaSeis.readhdrs!-Tuple{TeaSeis.JSeis,AbstractArray{UInt8,N},Union{Colon,Int64,Range{Int64}},Vararg{Union{Colon,Int64,Range{Int64}},N}}' href='#TeaSeis.readhdrs!-Tuple{TeaSeis.JSeis,AbstractArray{UInt8,N},Union{Colon,Int64,Range{Int64}},Vararg{Union{Colon,Int64,Range{Int64}},N}}'>#</a>
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L1401-L1427' class='documenter-source'>source</a><br>
+
+<a id='TeaSeis.readhdrs!-Tuple{TeaSeis.JSeis,AbstractArray{UInt8,N} where N,Union{Colon, Int64, Range{Int64}},Vararg{Union{Colon, Int64, Range{Int64}},N} where N}' href='#TeaSeis.readhdrs!-Tuple{TeaSeis.JSeis,AbstractArray{UInt8,N} where N,Union{Colon, Int64, Range{Int64}},Vararg{Union{Colon, Int64, Range{Int64}},N} where N}'>#</a>
 **`TeaSeis.readhdrs!`** &mdash; *Method*.
 
 
@@ -1485,7 +1610,10 @@ readhdrs!(jsopen("data_5D.js"), hdrs, :, :, :, :)
 readhdrs!(jsopen("data_5D.js"), hdrs, :, 2, 2:2:10, 1:10)
 ```
 
-<a id='TeaSeis.readhdrs-Tuple{TeaSeis.JSeis,Union{Colon,Int64,Range{Int64}},Vararg{Union{Colon,Int64,Range{Int64}},N}}' href='#TeaSeis.readhdrs-Tuple{TeaSeis.JSeis,Union{Colon,Int64,Range{Int64}},Vararg{Union{Colon,Int64,Range{Int64}},N}}'>#</a>
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L1792-L1818' class='documenter-source'>source</a><br>
+
+<a id='TeaSeis.readhdrs-Tuple{TeaSeis.JSeis,Union{Colon, Int64, Range{Int64}},Vararg{Union{Colon, Int64, Range{Int64}},N} where N}' href='#TeaSeis.readhdrs-Tuple{TeaSeis.JSeis,Union{Colon, Int64, Range{Int64}},Vararg{Union{Colon, Int64, Range{Int64}},N} where N}'>#</a>
 **`TeaSeis.readhdrs`** &mdash; *Method*.
 
 
@@ -1517,7 +1645,10 @@ hdrs = readhdrs(jsopen("data_5D.js"), :, :, :, :, :)
 hdrs = readhdrs(jsopen("data_5D.js"), :, :, 2, 2:2:10, 1:10)
 ```
 
-<a id='TeaSeis.readtrcs!-Tuple{TeaSeis.JSeis,AbstractArray{Float32,N},Union{Colon,Int64,Range{Int64}},Union{Colon,Int64,Range{Int64}},Vararg{Union{Colon,Int64,Range{Int64}},N}}' href='#TeaSeis.readtrcs!-Tuple{TeaSeis.JSeis,AbstractArray{Float32,N},Union{Colon,Int64,Range{Int64}},Union{Colon,Int64,Range{Int64}},Vararg{Union{Colon,Int64,Range{Int64}},N}}'>#</a>
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L1825-L1850' class='documenter-source'>source</a><br>
+
+<a id='TeaSeis.readtrcs!-Tuple{TeaSeis.JSeis,AbstractArray{Float32,N} where N,Union{Colon, Int64, Range{Int64}},Union{Colon, Int64, Range{Int64}},Vararg{Union{Colon, Int64, Range{Int64}},N} where N}' href='#TeaSeis.readtrcs!-Tuple{TeaSeis.JSeis,AbstractArray{Float32,N} where N,Union{Colon, Int64, Range{Int64}},Union{Colon, Int64, Range{Int64}},Vararg{Union{Colon, Int64, Range{Int64}},N} where N}'>#</a>
 **`TeaSeis.readtrcs!`** &mdash; *Method*.
 
 
@@ -1549,7 +1680,10 @@ readtrcs!(jsopen("data_5D.js"), trcs, :, :, :, :, :)
 readtrcs!(jsopen("data_5D.js"), trcs, :, :, 2, 2:2:10, 1:10)
 ```
 
-<a id='TeaSeis.readtrcs-Tuple{TeaSeis.JSeis,Union{Colon,Int64,Range{Int64}},Union{Colon,Int64,Range{Int64}},Vararg{Union{Colon,Int64,Range{Int64}},N}}' href='#TeaSeis.readtrcs-Tuple{TeaSeis.JSeis,Union{Colon,Int64,Range{Int64}},Union{Colon,Int64,Range{Int64}},Vararg{Union{Colon,Int64,Range{Int64}},N}}'>#</a>
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L1726-L1751' class='documenter-source'>source</a><br>
+
+<a id='TeaSeis.readtrcs-Tuple{TeaSeis.JSeis,Union{Colon, Int64, Range{Int64}},Union{Colon, Int64, Range{Int64}},Vararg{Union{Colon, Int64, Range{Int64}},N} where N}' href='#TeaSeis.readtrcs-Tuple{TeaSeis.JSeis,Union{Colon, Int64, Range{Int64}},Union{Colon, Int64, Range{Int64}},Vararg{Union{Colon, Int64, Range{Int64}},N} where N}'>#</a>
 **`TeaSeis.readtrcs`** &mdash; *Method*.
 
 
@@ -1581,6 +1715,9 @@ trcs = readtrcs(jsopen("data_5D.js"), :, :, :, :, :)
 trcs = readtrcs(jsopen("data_5D.js"), :, :, 2, 2:2:10, 1:10)
 ```
 
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L1758-L1784' class='documenter-source'>source</a><br>
+
 <a id='TeaSeis.regularize!-Tuple{TeaSeis.JSeis,Array{Float32,2},Array{UInt8,2}}' href='#TeaSeis.regularize!-Tuple{TeaSeis.JSeis,Array{Float32,2},Array{UInt8,2}}'>#</a>
 **`TeaSeis.regularize!`** &mdash; *Method*.
 
@@ -1592,7 +1729,10 @@ regularize!(io, trcs, hdrs)
 
 Regularize the traces in a frame, moving them from their left-justified state, to one that reflects their trace location within a frame according to their trace framework definition.
 
-<a id='TeaSeis.set!-Tuple{TeaSeis.TraceProperty,AbstractArray{UInt8,2},Int64,T<:Number}' href='#TeaSeis.set!-Tuple{TeaSeis.TraceProperty,AbstractArray{UInt8,2},Int64,T<:Number}'>#</a>
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L2322-L2327' class='documenter-source'>source</a><br>
+
+<a id='TeaSeis.set!-Union{Tuple{T}, Tuple{TeaSeis.TraceProperty,AbstractArray{UInt8,2},Int64,T}} where T<:Number' href='#TeaSeis.set!-Union{Tuple{T}, Tuple{TeaSeis.TraceProperty,AbstractArray{UInt8,2},Int64,T}} where T<:Number'>#</a>
 **`TeaSeis.set!`** &mdash; *Method*.
 
 
@@ -1602,6 +1742,9 @@ set!(prop, hdrs, i, value)
 ```
 
 Set the value of the trace property `prop::TraceProperty` stored in the header of the ith column of `hdrs::Array{UInt8,2}` to `value::T`.  For example, `io=jsopen("test.js"); hdrs=readframehdrs(io,1); set!(prop(io,"REC_X"), 1, 10.0)`.
+
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L1081-L1087' class='documenter-source'>source</a><br>
 
 <a id='TeaSeis.units-Tuple{TeaSeis.JSeis,Int64}' href='#TeaSeis.units-Tuple{TeaSeis.JSeis,Int64}'>#</a>
 **`TeaSeis.units`** &mdash; *Method*.
@@ -1614,6 +1757,9 @@ units(io, i)
 
 Returns the unit of measure of the ith dimension of the framework axes of the JavaSeis dataset corresponding to `io::JSeis`.
 
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L2435-L2440' class='documenter-source'>source</a><br>
+
 <a id='TeaSeis.units-Tuple{TeaSeis.JSeis}' href='#TeaSeis.units-Tuple{TeaSeis.JSeis}'>#</a>
 **`TeaSeis.units`** &mdash; *Method*.
 
@@ -1624,6 +1770,9 @@ units(io)
 ```
 
 Returns the unit of measure of the framework axes of the JavaSeis dataset corresponding to `io::JSeis`.
+
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L2428-L2433' class='documenter-source'>source</a><br>
 
 <a id='TeaSeis.writeframe-Tuple{TeaSeis.JSeis,AbstractArray{Float32,2},AbstractArray{UInt8,2},Int64}' href='#TeaSeis.writeframe-Tuple{TeaSeis.JSeis,AbstractArray{Float32,2},AbstractArray{UInt8,2},Int64}'>#</a>
 **`TeaSeis.writeframe`** &mdash; *Method*.
@@ -1636,7 +1785,10 @@ writeframe(io, trcs, hdrs)
 
 Write a frame of data to the JavaSeis dataset corresponding to `io::JSeis`.  `trcs` and `hdrs` are 2-dimensional arrays. The location of the dataset written to is determined by the values of the framework headers stored in `hdrs`.
 
-<a id='TeaSeis.writeframe-Tuple{TeaSeis.JSeis,AbstractArray{Float32,2},Vararg{Int64,N}}' href='#TeaSeis.writeframe-Tuple{TeaSeis.JSeis,AbstractArray{Float32,2},Vararg{Int64,N}}'>#</a>
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L1969-L1974' class='documenter-source'>source</a><br>
+
+<a id='TeaSeis.writeframe-Tuple{TeaSeis.JSeis,AbstractArray{Float32,2},Vararg{Int64,N} where N}' href='#TeaSeis.writeframe-Tuple{TeaSeis.JSeis,AbstractArray{Float32,2},Vararg{Int64,N} where N}'>#</a>
 **`TeaSeis.writeframe`** &mdash; *Method*.
 
 
@@ -1665,6 +1817,34 @@ writeframe(jsopen("data_4D.js"), trcs, 1, 2) # write to frame 1, volume 2
 writeframe(jsopen("data_5D.js"), trcs, 1, 2, 3) # write to frame 1, volume 2, hypercube 3
 ```
 
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L1981-L2004' class='documenter-source'>source</a><br>
+
+<a id='TeaSeis.Geometry-Tuple{}' href='#TeaSeis.Geometry-Tuple{}'>#</a>
+**`TeaSeis.Geometry`** &mdash; *Method*.
+
+
+
+```
+g = Geometry(;ox=0.0,oy=0.0,oz=0.0,ux=1.0,uy=0.0,uz=0.0,vx=0.0,vy=1.0,vz=0.0,wx=0.0,wy=0.0,wz=1.0,u1=0,un=0,v1=0,vn=0,w1=0,wn=0)
+```
+
+where `g::Geometry`.  The named arguments are:
+
+  * `ox=0.0,oy=0.0,oz=0.0` origin of axes
+  * `ux=1.0,uy=0.0,uz=0.0` end of u-vector (e.g. end of first in-line, in the cross-line direction
+  * `vx=0.0,vy=1.0,vz=0.0` end of v-vector (e.g. end of first cross-line, in the in-line direction
+  * `wx=0.0,wy=0.0,wz=1.0` end of depth axis
+  * `u1=1` minimum index along the u-vector (e.g. maximum cross-line index)
+  * `un=2` maximum index along the u-vector (e.g. maximum cross-line index)
+  * `v1=1` minimum index along the v-vector (e.g. minimum in-line index)
+  * `vn=2` maximum index along the v-vector (e.g. maximum in-line index)
+  * `w1=1` minimum depth index
+  * `wn=2` maximum depth index
+
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/geometry.jl#L22-L37' class='documenter-source'>source</a><br>
+
 <a id='Base.Filesystem.cp-Tuple{TeaSeis.JSeis,AbstractString}' href='#Base.Filesystem.cp-Tuple{TeaSeis.JSeis,AbstractString}'>#</a>
 **`Base.Filesystem.cp`** &mdash; *Method*.
 
@@ -1675,6 +1855,9 @@ cp(src, dst, [secondaries=nothing])
 ```
 
 Copy a file from `src` (of type `JSeis`) to `dst` of type `String`.  For example, `cp(jsopen("copyfrom.js"), "copyto.js")`. Use the optional named argument `secondaries` to change the JavaSeis secondary location.
+
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L426-L431' class='documenter-source'>source</a><br>
 
 <a id='Base.Filesystem.mv-Tuple{TeaSeis.JSeis,AbstractString}' href='#Base.Filesystem.mv-Tuple{TeaSeis.JSeis,AbstractString}'>#</a>
 **`Base.Filesystem.mv`** &mdash; *Method*.
@@ -1687,6 +1870,9 @@ mv(src, dst, [secondaries=nothing])
 
 Move a file from `src` (of type `JSeis`) to `dst` of type `String`.  For example, `cp(jsopen("movefrom.js"), "moveto.js")`. Use the optional named argument `secondaries` to change the JavaSeis secondary location.
 
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L444-L449' class='documenter-source'>source</a><br>
+
 <a id='Base.Filesystem.rm-Tuple{TeaSeis.JSeis}' href='#Base.Filesystem.rm-Tuple{TeaSeis.JSeis}'>#</a>
 **`Base.Filesystem.rm`** &mdash; *Method*.
 
@@ -1698,6 +1884,9 @@ rm(io)
 
 Remove a JavaSeis dataset from disk.  For example: `rm(jsopen("deleteme.js"))`
 
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L379-L383' class='documenter-source'>source</a><br>
+
 <a id='Base.close-Tuple{TeaSeis.JSeis}' href='#Base.close-Tuple{TeaSeis.JSeis}'>#</a>
 **`Base.close`** &mdash; *Method*.
 
@@ -1708,6 +1897,9 @@ close(io)
 ```
 
 Close an open JavaSeis dataset where `io` is of type `JSeis` created using, for example, `jsopen`.
+
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L370-L374' class='documenter-source'>source</a><br>
 
 <a id='Base.copy!-Tuple{TeaSeis.JSeis,AbstractArray{UInt8,2},TeaSeis.JSeis,AbstractArray{UInt8,2}}' href='#Base.copy!-Tuple{TeaSeis.JSeis,AbstractArray{UInt8,2},TeaSeis.JSeis,AbstractArray{UInt8,2}}'>#</a>
 **`Base.copy!`** &mdash; *Method*.
@@ -1728,6 +1920,9 @@ hdrsout = readframehdrs(ioout,1)
 copy!(ioout, hdrsout, ioin, hdrsin)
 ```
 
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L1129-L1142' class='documenter-source'>source</a><br>
+
 <a id='Base.empty!-Tuple{TeaSeis.JSeis}' href='#Base.empty!-Tuple{TeaSeis.JSeis}'>#</a>
 **`Base.empty!`** &mdash; *Method*.
 
@@ -1738,6 +1933,9 @@ empty!(io)
 ```
 
 Empty a JavaSeis dataset from disk, retaining the meta-information.  For example: `empty!(jsopen("emptyme.js"))`
+
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L391-L395' class='documenter-source'>source</a><br>
 
 <a id='Base.get-Tuple{TeaSeis.TraceProperty,AbstractArray{UInt8,2},Int64}' href='#Base.get-Tuple{TeaSeis.TraceProperty,AbstractArray{UInt8,2},Int64}'>#</a>
 **`Base.get`** &mdash; *Method*.
@@ -1750,7 +1948,10 @@ get(prop, hdrs, i)
 
 Get the value of the trace property `prop::TraceProperty` stored in the header of the ith column of `hdrs::Array{UInt8,2}`.  For example, `io=jsopen("data.js"); get(prop(io, "REC_X"), readframehdrs(io,1), 1)`.
 
-<a id='Base.get-Tuple{TeaSeis.TraceProperty{T<:Number},Array{UInt8,1}}' href='#Base.get-Tuple{TeaSeis.TraceProperty{T<:Number},Array{UInt8,1}}'>#</a>
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L1073-L1078' class='documenter-source'>source</a><br>
+
+<a id='Base.get-Union{Tuple{T}, Tuple{TeaSeis.TraceProperty{T},Array{UInt8,1}}} where T<:Number' href='#Base.get-Union{Tuple{T}, Tuple{TeaSeis.TraceProperty{T},Array{UInt8,1}}} where T<:Number'>#</a>
 **`Base.get`** &mdash; *Method*.
 
 
@@ -1761,7 +1962,10 @@ get(prop, hdr)
 
 Get the value of the trace property `prop::TraceProperty` stored in the header `hdr::Array{UInt8,1}`.  For example, `io=jsopen("data.js"); get(prop(io, "REC_X"), readframehdrs(io,1)[:,1])`
 
-<a id='Base.in-Tuple{Union{String,TeaSeis.TracePropertyDef,TeaSeis.TraceProperty},TeaSeis.JSeis}' href='#Base.in-Tuple{Union{String,TeaSeis.TracePropertyDef,TeaSeis.TraceProperty},TeaSeis.JSeis}'>#</a>
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L1052-L1057' class='documenter-source'>source</a><br>
+
+<a id='Base.in-Tuple{Union{String, TeaSeis.TraceProperty, TeaSeis.TracePropertyDef},TeaSeis.JSeis}' href='#Base.in-Tuple{Union{String, TeaSeis.TraceProperty, TeaSeis.TracePropertyDef},TeaSeis.JSeis}'>#</a>
 **`Base.in`** &mdash; *Method*.
 
 
@@ -1771,6 +1975,9 @@ in(trace_property, io)
 ```
 
 Returns true if `trace_property` is in the header catalog of `io::JSeis`, and where `trace_property` is one of `String`, `TracePropertyDef` or `TraceProperty`.
+
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L2533-L2538' class='documenter-source'>source</a><br>
 
 <a id='Base.ind2sub-Tuple{TeaSeis.JSeis,Int64}' href='#Base.ind2sub-Tuple{TeaSeis.JSeis,Int64}'>#</a>
 **`Base.ind2sub`** &mdash; *Method*.
@@ -1789,6 +1996,9 @@ for i = 1:length(io)
 end
 ```
 
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L2240-L2252' class='documenter-source'>source</a><br>
+
 <a id='Base.isempty-Tuple{TeaSeis.JSeis}' href='#Base.isempty-Tuple{TeaSeis.JSeis}'>#</a>
 **`Base.isempty`** &mdash; *Method*.
 
@@ -1799,6 +2009,9 @@ isempty(io)
 ```
 
 Returns true if the dataset correpsonding to `io` is empty (contains no data), and false otherwise.
+
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L2526-L2531' class='documenter-source'>source</a><br>
 
 <a id='Base.length-Tuple{TeaSeis.JSeis}' href='#Base.length-Tuple{TeaSeis.JSeis}'>#</a>
 **`Base.length`** &mdash; *Method*.
@@ -1811,6 +2024,9 @@ length(io)
 
 Returns the number of frames in a JavaSeis dataset corresponding to `io::JSeis`. This is equivalent to `prod(size(io)[3:end])`, and is useful for iterating over all frames in a JavaSeis dataset.
 
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L2378-L2384' class='documenter-source'>source</a><br>
+
 <a id='Base.ndims-Tuple{TeaSeis.JSeis}' href='#Base.ndims-Tuple{TeaSeis.JSeis}'>#</a>
 **`Base.ndims`** &mdash; *Method*.
 
@@ -1822,7 +2038,10 @@ ndims(io)
 
 Returns the numbers of dimensions of the JavaSeis dataset corresponding to `io::JSeis`.
 
-<a id='Base.read!-Tuple{TeaSeis.JSeis,AbstractArray{Float32,N},AbstractArray{UInt8,N},Union{Colon,Int64,Range{Int64}},Union{Colon,Int64,Range{Int64}},Vararg{Union{Colon,Int64,Range{Int64}},N}}' href='#Base.read!-Tuple{TeaSeis.JSeis,AbstractArray{Float32,N},AbstractArray{UInt8,N},Union{Colon,Int64,Range{Int64}},Union{Colon,Int64,Range{Int64}},Vararg{Union{Colon,Int64,Range{Int64}},N}}'>#</a>
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L2360-L2364' class='documenter-source'>source</a><br>
+
+<a id='Base.read!-Tuple{TeaSeis.JSeis,AbstractArray{Float32,N} where N,AbstractArray{UInt8,N} where N,Union{Colon, Int64, Range{Int64}},Union{Colon, Int64, Range{Int64}},Vararg{Union{Colon, Int64, Range{Int64}},N} where N}' href='#Base.read!-Tuple{TeaSeis.JSeis,AbstractArray{Float32,N} where N,AbstractArray{UInt8,N} where N,Union{Colon, Int64, Range{Int64}},Union{Colon, Int64, Range{Int64}},Vararg{Union{Colon, Int64, Range{Int64}},N} where N}'>#</a>
 **`Base.read!`** &mdash; *Method*.
 
 
@@ -1854,7 +2073,10 @@ read!(jsopen("data_5D.js"), trcs, hdrs, :, :, :, :, :)
 read!(jsopen("data_5D.js"), trcs, hdrs, :, :, 2, 2:2:10, 1:10)
 ```
 
-<a id='Base.read-Tuple{TeaSeis.JSeis,Union{Colon,Int64,Range{Int64}},Union{Colon,Int64,Range{Int64}},Vararg{Union{Colon,Int64,Range{Int64}},N}}' href='#Base.read-Tuple{TeaSeis.JSeis,Union{Colon,Int64,Range{Int64}},Union{Colon,Int64,Range{Int64}},Vararg{Union{Colon,Int64,Range{Int64}},N}}'>#</a>
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L1858-L1883' class='documenter-source'>source</a><br>
+
+<a id='Base.read-Tuple{TeaSeis.JSeis,Union{Colon, Int64, Range{Int64}},Union{Colon, Int64, Range{Int64}},Vararg{Union{Colon, Int64, Range{Int64}},N} where N}' href='#Base.read-Tuple{TeaSeis.JSeis,Union{Colon, Int64, Range{Int64}},Union{Colon, Int64, Range{Int64}},Vararg{Union{Colon, Int64, Range{Int64}},N} where N}'>#</a>
 **`Base.read`** &mdash; *Method*.
 
 
@@ -1886,6 +2108,9 @@ trcs, hdrs = read(jsopen("data_5D.js"), :, :, :, :, :)
 trcs, hdrs = read(jsopen("data_5D.js"), :, :, 2, 2:2:10, 1:10)
 ```
 
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L1891-L1916' class='documenter-source'>source</a><br>
+
 <a id='Base.size-Tuple{TeaSeis.JSeis,Int64}' href='#Base.size-Tuple{TeaSeis.JSeis,Int64}'>#</a>
 **`Base.size`** &mdash; *Method*.
 
@@ -1896,6 +2121,9 @@ size(io, i)
 ```
 
 Returns the lenth of dimension i of a JavaSeis dataset corresponding to `io::JSeis`.
+
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L2372-L2376' class='documenter-source'>source</a><br>
 
 <a id='Base.size-Tuple{TeaSeis.JSeis}' href='#Base.size-Tuple{TeaSeis.JSeis}'>#</a>
 **`Base.size`** &mdash; *Method*.
@@ -1908,6 +2136,9 @@ size(io)
 
 Returns the lenths of all dimensions (as a tuple of integers) of a JavaSeis dataset corresponding to `io::JSeis`.
 
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L2366-L2370' class='documenter-source'>source</a><br>
+
 <a id='Base.write' href='#Base.write'>#</a>
 **`Base.write`** &mdash; *Function*.
 
@@ -1919,7 +2150,10 @@ write(io, trcs, hdrs[, smprng=:])
 
 Write `trcs` and `hdrs` to the file corresponding to `io::JSeis`.  Optionally, you can limit which samples are written. The locations that are written to are determined by the values corresponding to the framework headers `hdrs`.  Note that the dimension of the arrays `trcs` and `hdrs` must match the number of dimensions in the framework.
 
-<a id='Base.write-Tuple{TeaSeis.JSeis,AbstractArray{Float32,N},Union{Colon,Int64,Range{Int64}},Union{Colon,Int64,Range{Int64}},Vararg{Union{Colon,Int64,Range{Int64}},N}}' href='#Base.write-Tuple{TeaSeis.JSeis,AbstractArray{Float32,N},Union{Colon,Int64,Range{Int64}},Union{Colon,Int64,Range{Int64}},Vararg{Union{Colon,Int64,Range{Int64}},N}}'>#</a>
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L2018-L2024' class='documenter-source'>source</a><br>
+
+<a id='Base.write-Tuple{TeaSeis.JSeis,AbstractArray{Float32,N} where N,Union{Colon, Int64, Range{Int64}},Union{Colon, Int64, Range{Int64}},Vararg{Union{Colon, Int64, Range{Int64}},N} where N}' href='#Base.write-Tuple{TeaSeis.JSeis,AbstractArray{Float32,N} where N,Union{Colon, Int64, Range{Int64}},Union{Colon, Int64, Range{Int64}},Vararg{Union{Colon, Int64, Range{Int64}},N} where N}'>#</a>
 **`Base.write`** &mdash; *Method*.
 
 
@@ -1947,4 +2181,7 @@ write(io, trcs, :, :, :, :)
 ```julia
 write(io, trcs, :, :, :, :, :)
 ```
+
+
+<a target='_blank' href='https://github.com/ChevronETC/TeaSeis.jl/blob/08653b78bece7eaa926adf32c6b9502631a7d250/src/teaseisio.jl#L2061-L2084' class='documenter-source'>source</a><br>
 
