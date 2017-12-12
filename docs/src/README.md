@@ -181,7 +181,7 @@ An array of custom trace properties.  These are in addition to a minimal set of 
 * `dataproperties::Array{DataProperty, 1}`<br>
 An array of custom data properties.  One property per data-set rather than one property per trace as in `properties` above.
 
-* `geom::Geometry`<br>
+* `geometry::Geometry`<br>
 An optional three point geometry can be embedded in the JavaSeis file.
 
 * `properties_add::Array{TracePropertyDef}`
@@ -436,9 +436,9 @@ Then the secondary location is determined by replacing `/home/joe/projects` in `
 
 TeaSeis.jl provides support for storing survey geometry using three-points to define rotated/translated coordinate system.
 ```julia
-geom = Geometry(min_inline, max_inline, min_crossline, max_crossline, x1, y1, x2, y2, x3, y3)
+geom = Geometry(u1=1,un=2,v1=1,vn=2,w1=1,wn=2,ux=1.0,uy=0.0,uz=0.0,vx=0.0,vy=1.0,vz=0.0,wx=0.0,wy=0.0,wz=1.0)
 ```
-where (x1,y1) is at the intersection of the inline and crossline axes.  (x2,y2) is the end of the first crossline, and (x3,y3) is the end of the first inline.  TeaSeis.jl does not provide any tools for using this geometry to manipulate trace coordinates.  I would recommend that this functionality be put into a separate package.
+where `(ox,oy,oz)` is the origin, `(ux,uy,uz)` is a vector to define the end of the `u-axis` (e.g. cross-line axis), `(vx,vy,vz)` is the end of the `v-axis` (e.g. the in-line axis), and `(wx,wy,wz)` is the end of the `w-axis` (e.g. the depth axis).  `(u1,un)` are the first and last bin indices along the `u-axis`, `(v1,vn)` are the first and last bin indices along the `v-axis`, and `(w1,wn)` are the first and last bin indices along the `w-axis`.  TeaSeis.jl does not provide any tools for using this geometry to manipulate trace coordinates.  I would recommend that this functionality be put into a separate package.
 
 <center>![](geometry.png)</center>
 
@@ -481,6 +481,7 @@ isempty(io)            # returns true if the dataset is empty (without trace or 
 in(prop,io)            # returns true if the trace property `prop` exists in `io` --  `prop` can be of types `::TraceProperty`, `::TracePropertyDef`, or `::String`
 dataproperty(io,nm)    # returns the value held in the data property: `nm::String`
 hasdataproperty(io,nm) # returns true if the data property corresponding to label `nm::String` is in `io::JSeis`
+geometry(io)           # returns `Geometry`, the stored geometry of the dataset.  If no geometry is stored, `nothing` is returned
 ```
 Convenience methods are supplied for manipulating `io::JSeis`:
 ```julia

@@ -16,7 +16,7 @@ type JSeis
     axis_pstarts::Array{Float64,1}
     axis_pincs::Array{Float64,1}
     dataproperties::Array{DataProperty,1}
-    geom::Geometry
+    geom::Nullable{Geometry}
     hastraces::Bool
     secondaries::Array{String, 1}
     trcextents::Array{Extent,1}
@@ -56,7 +56,7 @@ named function parameters are available:
 * `axis_pincs::Array{Float64}` Physical increments for each axis.  If not set, then `1.0` is used for the physical increments of each axis.
 * `data_properties::Array{DataProperty}` An array of custom trace properties.  These are in addition to the properties listed in `SSPROPS.md`.
 * `properties::Array{TracePropertyDef}` An array of custom data properties.  One property per data-set rather than one property per trace as in `properties` above.
-* `geom::Geometry` An optional three point geometry can be embedded in the JavaSeis file.
+* `geometry::Geometry` An optional three point geometry can be embedded in the JavaSeis file.
 * `secondaries::Array{String}` An array of file-system locations used to store the file extents.  If not set, then *primary* storage is used.
 * `nextents::Int64` The number of file-extents used to store the data.  If not set, then a heuristic is used to choose the number of extents.  The heuristic is: min(256,10 + (FRAMEWORK_SIZE)/(2\*1024^3)).
 * `properties_add::Array{TracePropertyDef}` When `similarto` is specified, use this to add trace properties to those already existing in the `similarto` file.
@@ -81,7 +81,7 @@ function jsopen(
         axis_pincs         = Array{Float64}(0),          # physical increment between bins for each axis
         dataproperties     = Array{DataProperty}(0),     # add global data properties
         properties         = Array{TracePropertyDef}(0), # add headers to the standard set
-        geom               = nothing,                    # 3 point geometry
+        geometry           = nothing,                    # 3 point geometry
         secondaries        = nothing,                    # secondary file-system locations for storing trace and header data, defaults to primary storage "."
         nextents           = 0,                          # number of file extents
         similarto          = "",                         # create a JavaSeis file similar to this one
@@ -114,7 +114,7 @@ function jsopen(
         io.axis_pstarts   = get_axis_pstarts(xml)
         io.axis_pincs     = get_axis_pincs(xml)
         io.dataproperties = get_dataproperties(xml)
-        io.geom           = get_geom(xml)
+        io.geom           = Nullable{Geometry}(get_geom(xml))
 
         io.hastraces = false
         if isfile(joinpath(filename, "Status.properties")) == true # Do not fail if Status.properties does not exist to maintain backwards compat
@@ -158,7 +158,7 @@ function jsopen(
         io.axis_pstarts   = axis_pstarts
         io.axis_pincs     = axis_pincs
         io.dataproperties = dataproperties
-        io.geom           = geom == nothing ? Geometry() : geom
+        io.geom           = geometry == nothing ? Nullable{Geometry}() : Nullable{Geometry}(geometry)
         io.secondaries    = secondaries == nothing ? ["."] : secondaries
     elseif mode == "w" && similarto != ""
         iosim = jsopen(similarto, "r")
@@ -223,7 +223,7 @@ function jsopen(
         io.axis_pstarts   = length(axis_pstarts) == 0 ? copy(iosim.axis_pstarts) : axis_pstarts
         io.axis_pincs     = length(axis_pincs) == 0 ? copy(iosim.axis_pincs) : axis_pincs
         io.dataproperties = dataproperties
-        io.geom           = geom == nothing ? copy(iosim.geom) : geom
+        io.geom           = geometry == nothing ? (isnull(iosim.geom) ? Nullable{Geometry}() : Nullable{Geometry}(get(iosim.geom))) : Nullable{Geometry}(geometry)
         io.secondaries    = secondaries == nothing ? copy(iosim.secondaries) : secondaries
         nextents          = nextents == 0 ? length(iosim.trcextents) : nextents
     end
@@ -569,30 +569,21 @@ function get_geom(xml::XMLDocument)
         if attribute(parset, "name") == "CustomProperties"
             for parset2 in child_elements(parset)
                 if attribute(parset2, "name") == "Geometry"
+                    g = Dict()
                     for par in child_elements(parset)
-                        if attribute(par, "name") == "minILine"
-                            minIL = Int32(content(par))
-                        elseif attribute(par, "name") == "maxILine"
-                            maxIL = Int32(content(par))
-                        elseif attribute(par, "name") == "minXLine"
-                            minXL = Int32(content(par))
-                        elseif attribute(par, "name") == "maxXLine"
-                            maxXL = Int32(content(par))
-                        elseif attribute(par, "name") == "xILine1End"
-                            xILEnd = float32(content(par))
-                        elseif attribute(par, "name") == "yILine1End"
-                            yILEnd = float32(content(par))
-                        elseif attribute(par, "name") == "xILine1Start"
-                            xILStr = float32(content(par))
-                        elseif attribute(par, "name") == "yILine1Start"
-                            yILStr = float32(content(par))
-                        elseif attribute(par, "name") == "xXLine1End"
-                            xXLEnd = float32(content(par))
-                        elseif attribute(par, "name") == "yXLine1End"
-                            yXLEnd = float32(content(par))
+                        parname = attribute(par, "name")
+                        if in(parname, ("u1","un","v1","vn","w1","wn"))
+                            g[parname] = Int(content(par))
+                        else
+                            g[parname] = Float64(content(par))
                         end
                     end
-                    return Geometry(minIL, maxIL, minXL, maxXL, xILEnd, yILEnd, xILStr, yILStr, xXLEnd, yXLEnd)
+                    return Geometry(
+                        g["u1"],g["un"],g["v1"],g["vn"],g["w1"],g["wn"],
+                        g["ox"],g["oy"],g["oz"],
+                        g["ux"],g["uy"],g["uz"],
+                        g["vx"],g["vy"],g["vz"],
+                        g["wx"],g["wy"],g["wz"])
                 end
             end
         end
@@ -756,20 +747,28 @@ function write_fileproperties(io::JSeis)
         write_parproperty(customproperties, dataprop.label, propertyformatstring(dataprop), " $(convert(dataprop.format, dataprop.value)) ")
     end
 
-    # geometry (3-point geom)
-    if io.geom != nothing
+    # 3-point geometry
+    if isnull(io.geom) == false
         geometry = new_child(customproperties, "parset")
         set_attribute(geometry, "name", "Geometry")
-        write_parproperty(geometry, "xILine1Start", "double", " $(io.geom.xILine1Start) ")
-        write_parproperty(geometry, "yILine1Start", "double", " $(io.geom.yILine1Start) ")
-        write_parproperty(geometry, "xILine1End",   "double", " $(io.geom.xILine1End) ")
-        write_parproperty(geometry, "yILine1End",   "double", " $(io.geom.yILine1End) ")
-        write_parproperty(geometry, "xXLine1End",   "double", " $(io.geom.xXLine1End) ")
-        write_parproperty(geometry, "yXLine1End",   "double", " $(io.geom.yXLine1End) ")
-        write_parproperty(geometry, "minILine",     "int",    " $(io.geom.minILine) ")
-        write_parproperty(geometry, "maxILine",     "int",    " $(io.geom.maxILine) ")
-        write_parproperty(geometry, "minXLine",     "int",    " $(io.geom.minXLine) ")
-        write_parproperty(geometry, "maxXLine",     "int",    " $(io.geom.maxXLine) ")
+        write_parproperty(geometry, "u1", "long",   " $(get(io.geom).u1) ")
+        write_parproperty(geometry, "un", "long",   " $(get(io.geom).un) ")
+        write_parproperty(geometry, "v1", "long",   " $(get(io.geom).v1) ")
+        write_parproperty(geometry, "vn", "long",   " $(get(io.geom).vn) ")
+        write_parproperty(geometry, "w1", "long",   " $(get(io.geom).w1) ")
+        write_parproperty(geometry, "wn", "long",   " $(get(io.geom).wn) ")
+        write_parproperty(geometry, "ox", "double", " $(get(io.geom).ox) ")
+        write_parproperty(geometry, "oy", "double", " $(get(io.geom).oy) ")
+        write_parproperty(geometry, "oz", "double", " $(get(io.geom).oz) ")
+        write_parproperty(geometry, "ux", "double", " $(get(io.geom).ux) ")
+        write_parproperty(geometry, "uy", "double", " $(get(io.geom).uy) ")
+        write_parproperty(geometry, "uz", "double", " $(get(io.geom).uz) ")
+        write_parproperty(geometry, "vx", "double", " $(get(io.geom).vx) ")
+        write_parproperty(geometry, "vy", "double", " $(get(io.geom).vy) ")
+        write_parproperty(geometry, "vz", "double", " $(get(io.geom).vz) ")
+        write_parproperty(geometry, "wx", "double", " $(get(io.geom).wx) ")
+        write_parproperty(geometry, "wy", "double", " $(get(io.geom).wy) ")
+        write_parproperty(geometry, "wz", "double", " $(get(io.geom).wz) ")
     end
 
     # Write data
@@ -2538,3 +2537,11 @@ Returns true if `trace_property` is in the header catalog of `io::JSeis`, and wh
 is one of `String`, `TracePropertyDef` or `TraceProperty`.
 """
 in(prop::Union{String, TracePropertyDef, TraceProperty},  io::JSeis) = in(prop, io.properties)
+
+"""
+    geometry(io)
+
+If `io::JSeis` contains a geometry definition, then return a geometry of type `Geometry`.  Otherwise,
+return `nothing`.
+"""
+geometry(io::JSeis) = isnull(io.geom) ? nothing : get(io.geom)

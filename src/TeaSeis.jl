@@ -39,9 +39,11 @@ include("teaseisio.jl")
 
 export
 DataProperty,
+Geometry,
 JSeis,
 TracePropertyDef,
 dataproperty,
+geometry,
 hasdataproperty,
 jsopen,
 jscreate,

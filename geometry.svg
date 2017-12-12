@@ -120,7 +120,7 @@
          sodipodi:role="line"
          id="tspan4611"
          x="66.941956"
-         y="701.88794">(x1,y1)</tspan></text>
+         y="701.88794">(ox,oy)</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:24px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans;-inkscape-font-specification:Sans"
@@ -132,7 +132,7 @@
          sodipodi:role="line"
          id="tspan4643"
          x="16.025726"
-         y="506.43668">(x2,y2)</tspan></text>
+         y="506.43668">(vx,vy)</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:24px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans;-inkscape-font-specification:Sans"
@@ -144,7 +144,7 @@
          sodipodi:role="line"
          id="tspan4645"
          x="250.44998"
-         y="701.64886">(x3,y3)</tspan></text>
+         y="701.64886">(ux,uy)</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:24px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans;-inkscape-font-specification:Sans"

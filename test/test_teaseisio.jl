@@ -483,16 +483,8 @@ mkdir(rundir)
                     @test io.properties[i].def.elementcount == iox.properties[i].def.elementcount
                 end
             end
-            @test io.geom.minILine == iox.geom.minILine
-            @test io.geom.maxILine == iox.geom.maxILine
-            @test io.geom.minXLine == iox.geom.minXLine
-            @test io.geom.maxXLine == iox.geom.maxXLine
-            @test io.geom.xILine1End ≈ iox.geom.xILine1End
-            @test io.geom.yILine1End ≈ iox.geom.yILine1End
-            @test io.geom.xILine1Start ≈ iox.geom.xILine1Start
-            @test io.geom.yILine1Start ≈ iox.geom.yILine1Start
-            @test io.geom.xXLine1End ≈ iox.geom.xXLine1End
-            @test io.geom.yXLine1End ≈ iox.geom.yXLine1End
+            @test geometry(io) == nothing
+            @test geometry(iox) == nothing
             @test typeof(io.compressor) == typeof(iox.compressor)
 
             @test length(io.secondaries) == length(iox.secondaries)

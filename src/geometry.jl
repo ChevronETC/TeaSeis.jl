@@ -1,39 +1,57 @@
-type Geometry
-    minILine::Int32
-    maxILine::Int32
-    minXLine::Int32
-    maxXLine::Int32
-    xILine1End::Float32
-    yILine1End::Float32
-    xILine1Start::Float32
-    yILine1Start::Float32
-    xXLine1End::Float32
-    yXLine1End::Float32
-end
-Geometry() = Geometry(0,0,0,0,0.,0.,0.,0.,0.,0.)
-
-function copy(geom::Geometry)
-    geom = Geometry(geom.minILine,
-                    geom.maxILine,
-                    geom.minXLine,
-                    geom.maxXLine,
-                    geom.xILine1End,
-                    geom.yILine1End,
-                    geom.xILine1Start,
-                    geom.yILine1Start,
-                    geom.xXLine1End,
-                    geom.yXLine1End)
+immutable Geometry
+    u1::Int
+    un::Int
+    v1::Int
+    vn::Int
+    w1::Int
+    wn::Int
+    ox::Float64
+    oy::Float64
+    oz::Float64
+    ux::Float64
+    uy::Float64
+    uz::Float64
+    vx::Float64
+    vy::Float64
+    vz::Float64
+    wx::Float64
+    wy::Float64
+    wz::Float64
 end
 
-function copy!(dst::Geometry, src::Geometry)
-    dst.minILine     = src.minILine
-    dst.maxILine     = src.maxILine
-    dst.minXLine     = src.minXLine
-    dst.maxXLine     = src.maxXLine
-    dst.xILine1End   = src.xILine1End
-    dst.yILine1End   = src.yILine1End
-    dst.xILine1Start = src.xILine1Start
-    dst.yILine1Start = src.yILine1Start
-    dst.xXLine1End   = src.xXline1End
-    dst.yXLine1End   = src.yXLine1End
+"""
+    g = Geometry(;ox=0.0,oy=0.0,oz=0.0,ux=1.0,uy=0.0,uz=0.0,vx=0.0,vy=1.0,vz=0.0,wx=0.0,wy=0.0,wz=1.0,u1=0,un=0,v1=0,vn=0,w1=0,wn=0)
+
+where `g::Geometry`.  The named arguments are:
+
+* `ox=0.0,oy=0.0,oz=0.0` origin of axes
+* `ux=1.0,uy=0.0,uz=0.0` end of u-vector (e.g. end of first in-line, in the cross-line direction
+* `vx=0.0,vy=1.0,vz=0.0` end of v-vector (e.g. end of first cross-line, in the in-line direction
+* `wx=0.0,wy=0.0,wz=1.0` end of depth axis
+* `u1=1` minimum index along the u-vector (e.g. maximum cross-line index)
+* `un=2` maximum index along the u-vector (e.g. maximum cross-line index)
+* `v1=1` minimum index along the v-vector (e.g. minimum in-line index)
+* `vn=2` maximum index along the v-vector (e.g. maximum in-line index)
+* `w1=1` minimum depth index
+* `wn=2` maximum depth index
+"""
+function Geometry(;
+        ox=0.0,oy=0.0,oz=0.0,
+        ux=1.0,uy=0.0,uz=0.0,
+        vx=0.0,vy=1.0,vz=0.0,
+        wx=0.0,wy=0.0,wz=1.0,
+        u1=1,un=2,
+        v1=1,vn=2,
+        w1=1,wn=2)
+    Geometry(u1,un,v1,vn,w1,wn,ox,oy,oz,ux,uy,uz,vx,vy,vz,wx,wy,wz)
+end
+
+function show(io::IO, g::Geometry)
+    write(io, "origin: ($(g.ox),$(g.oy),$(g.oz))\n")
+    write(io, "u: ($(g.ux),$(g.uy),$(g.uz))\n")
+    write(io, "v: ($(g.vx),$(g.vy),$(g.vz))\n")
+    write(io, "w: ($(g.wx),$(g.wy),$(g.wz))\n")
+    write(io, "u1,un: ($(g.u1),$(g.un))\n")
+    write(io, "v1,vn: ($(g.u1),$(g.un))\n")
+    write(io, "w1,wn: ($(g.u1),$(g.un))")
 end
