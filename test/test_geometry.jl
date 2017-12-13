@@ -7,7 +7,7 @@ using TeaSeis, Base.Test
         ux=10.0,uy=20.0,uz=30.0,
         vx=40.0,vy=50.0,vz=60.0,
         wx=70.0,wy=80.0,wz=90.0)
-    io = jsopen("test.js", "w", axis_lengths=[1,2,3], geometry = g)
+    io = jsopen("test.js", "w", axis_lengths=[1,2,3], geometry = g, dataproperties=[DataProperty("FOO", Int, 1)])
     g_test = geometry(io)
     @test g.u1 == g_test.u1
     @test g.un == g_test.un

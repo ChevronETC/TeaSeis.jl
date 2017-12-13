@@ -570,12 +570,12 @@ function get_geom(xml::XMLDocument)
             for parset2 in child_elements(parset)
                 if attribute(parset2, "name") == "Geometry"
                     g = Dict()
-                    for par in child_elements(parset)
+                    for par in child_elements(parset2)
                         parname = attribute(par, "name")
                         if in(parname, ("u1","un","v1","vn","w1","wn"))
-                            g[parname] = Int(content(par))
+                            g[parname] = parse(Int,content(par))
                         else
-                            g[parname] = Float64(content(par))
+                            g[parname] = parse(Float64,content(par))
                         end
                     end
                     return Geometry(
