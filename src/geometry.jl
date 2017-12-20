@@ -52,6 +52,6 @@ function show(io::IO, g::Geometry)
     write(io, "v: ($(g.vx),$(g.vy),$(g.vz))\n")
     write(io, "w: ($(g.wx),$(g.wy),$(g.wz))\n")
     write(io, "u1,un: ($(g.u1),$(g.un))\n")
-    write(io, "v1,vn: ($(g.u1),$(g.un))\n")
-    write(io, "w1,wn: ($(g.u1),$(g.un))")
+    write(io, "v1,vn: ($(g.v1),$(g.vn))\n")
+    write(io, "w1,wn: ($(g.w1),$(g.wn))")
 end
