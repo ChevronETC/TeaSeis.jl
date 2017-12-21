@@ -561,10 +561,6 @@ function get_dataproperties(xml::XMLDocument)
 end
 
 function get_geom(xml::XMLDocument)
-    minIL, maxIL, minXL, maxXL = 0, 0, 0, 0
-    xILEnd, yILEnd = 0.0, 0.0
-    xILStr, yILStr = 0.0, 0.0
-    xXLEnd, yXLEnd = 0.0, 0.0
     for parset in child_elements(root(xml))
         if attribute(parset, "name") == "CustomProperties"
             for parset2 in child_elements(parset)
