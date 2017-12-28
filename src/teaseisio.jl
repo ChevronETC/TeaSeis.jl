@@ -565,21 +565,26 @@ function get_geom(xml::XMLDocument)
         if attribute(parset, "name") == "CustomProperties"
             for parset2 in child_elements(parset)
                 if attribute(parset2, "name") == "Geometry"
-                    g = Dict()
-                    for par in child_elements(parset2)
-                        parname = attribute(par, "name")
-                        if in(parname, ("u1","un","v1","vn","w1","wn"))
-                            g[parname] = parse(Int,content(par))
-                        else
-                            g[parname] = parse(Float64,content(par))
+                    try
+                        g = Dict()
+                        for par in child_elements(parset2)
+                            parname = attribute(par, "name")
+                            if in(parname, ("u1","un","v1","vn","w1","wn"))
+                                g[parname] = parse(Int,content(par))
+                            else
+                                g[parname] = parse(Float64,content(par))
+                            end
                         end
+                        return Geometry(
+                            g["u1"],g["un"],g["v1"],g["vn"],g["w1"],g["wn"],
+                            g["ox"],g["oy"],g["oz"],
+                            g["ux"],g["uy"],g["uz"],
+                            g["vx"],g["vy"],g["vz"],
+                            g["wx"],g["wy"],g["wz"])
+                    catch
+                        warn("Corrupt geometry information")
+                        return nothing
                     end
-                    return Geometry(
-                        g["u1"],g["un"],g["v1"],g["vn"],g["w1"],g["wn"],
-                        g["ox"],g["oy"],g["oz"],
-                        g["ux"],g["uy"],g["uz"],
-                        g["vx"],g["vy"],g["vz"],
-                        g["wx"],g["wy"],g["wz"])
                 end
             end
         end
