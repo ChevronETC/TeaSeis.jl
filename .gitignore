@@ -4,3 +4,5 @@
 .nfs*
 *.cov
 docs/build
+teaseis-benchmarks-*
+results.md
