@@ -942,6 +942,7 @@ Compute the fold of a frame where idx is the frame/volume/hypercube indices.  Fo
 for a 3D dataset, `fold(jsopen("file.js",1,2))` for a 4D dataset, and `fold(jsopen("file.js"),1,2,3)` for a 5D dataset.
 """
 fold(io::JSeis, idx::Int64...) = fold_impl(io::JSeis, sub2ind(io, idx))
+fold(io::JSeis, idx::CartesianIndex) = fold_impl(io::JSeis, sub2ind(io, idx))
 
 function fold!(io::JSeis, frm::Int64, fld::Int)
     if io.mapped == true
@@ -965,7 +966,7 @@ function extentdir(secondary::String, filename::String)
     datahome = haskey(ENV, "PROMAX_DATA_HOME") ? ENV["PROMAX_DATA_HOME"] : ""
     datahome = haskey(ENV, "JAVASEIS_DATA_HOME") ? ENV["JAVASEIS_DATA_HOME"] : datahome
     if secondary == "."
-      return abspath(filename)
+        return abspath(filename)
     elseif datahome != ""
         filename = abspath(filename)
         if contains(filename, datahome) == true
@@ -1056,17 +1057,17 @@ headerlength(io::JSeis) = headerlength(io.properties)
 Get the value of the trace property `prop::TraceProperty` stored in the header `hdr::Array{UInt8,1}`.  For example,
 `io=jsopen("data.js"); get(prop(io, "REC_X"), readframehdrs(io,1)[:,1])`
 """
-function get{T<:Number}(prop::TraceProperty{T}, hdr::Array{UInt8,1})
+function get{T<:Number}(prop::TraceProperty{T}, hdr::AbstractArray{UInt8,1})
     iohdr = IOBuffer(hdr)
     seek(iohdr, prop.byteoffset)
     return read(iohdr, T)
 end
-function get{T<:Union{Int32,Int64,AbstractFloat}}(prop::TraceProperty{Array{T,1}}, hdr::Array{UInt8,1})
+function get{T<:Union{Int32,Int64,AbstractFloat}}(prop::TraceProperty{Array{T,1}}, hdr::AbstractArray{UInt8,1})
     iohdr = IOBuffer(hdr)
     seek(iohdr, prop.byteoffset)
     return read(iohdr, T, prop.def.elementcount)
 end
-function get(prop::TraceProperty{Array{UInt8,1}}, hdr::Array{UInt8,1})
+function get(prop::TraceProperty{Array{UInt8,1}}, hdr::AbstractArray{UInt8,1})
     iohdr = IOBuffer(hdr)
     seek(iohdr, prop.byteoffset)
     return strip(String(copy(read(iohdr, UInt8, prop.def.elementcount))),'\0')
@@ -1077,7 +1078,7 @@ end
 Get the value of the trace property `prop::TraceProperty` stored in the header of the ith column of
 `hdrs::Array{UInt8,2}`.  For example, `io=jsopen("data.js"); get(prop(io, "REC_X"), readframehdrs(io,1), 1)`.
 """
-get(prop::TraceProperty, hdr::AbstractArray{UInt8,2}, i::Int64) = get(prop, hdr[:,i])
+get(prop::TraceProperty, hdr::AbstractArray{UInt8,2}, i::Int64) = get(prop, @view(hdr[:,i]))
 
 """
     set!(prop, hdrs, i, value)
@@ -1269,7 +1270,8 @@ end
 function readframehdrs_impl!(io::JSeis, hdrs::AbstractArray{UInt8,2}, frm::Int64)
     @assert io.mode != "w"
     fld = Int(fold_impl(io, frm))
-    map(i->set!(prop(io, stockprop[:TRC_TYPE]), hdrs, i, tracetype[:dead]), (fld+1):size(hdrs,2))
+    prop_trctype = prop(io, stockprop[:TRC_TYPE])
+    map(i->set!(prop_trctype, hdrs, i, tracetype[:dead]), (fld+1):size(hdrs,2))
     if fld == 0
         return 0
     end
@@ -1334,6 +1336,7 @@ readframe!(io, trcs, hdrs, frm_idx, vol_idx, hyp_idx)
 ```
 """
 readframe!(io::JSeis, trcs::AbstractArray{Float32, 2}, hdrs::AbstractArray{UInt8, 2}, idx::Int...) = readframe_impl!(io, trcs, hdrs, sub2ind(io, idx))
+readframe!(io::JSeis, trcs::AbstractArray{Float32, 2}, hdrs::AbstractArray{UInt8, 2}, idx::CartesianIndex) = readframe_impl!(io, trcs, hdrs, sub2ind(io, idx))
 
 """
     readframe(io, idx...)
@@ -1363,6 +1366,7 @@ trcs, hdrs = readframe(jsopen("data_5D.js"), frm_idx, vol_idx, hyp_idx)
 ```
 """
 readframe(io::JSeis, idx::Int...) = readframe_impl(io, sub2ind(io, idx))
+readframe(io::JSeis, idx::CartesianIndex) = readframe_impl(io, sub2ind(io, idx))
 
 """
     readframetrcs!(io, trcs, hdrs, idx...)
@@ -1398,6 +1402,7 @@ readframetrcs!(io, trcs, frm_idx, vol_idx, hyp_idx)
 ```
 """
 readframetrcs!(io::JSeis, trcs::AbstractArray{Float32,2}, idx::Int...) = readframetrcs_impl!(io, trcs, sub2ind(io, idx))
+readframetrcs!(io::JSeis, trcs::AbstractArray{Float32,2}, idx::CartesianIndex) = readframetrcs_impl!(io, trcs, sub2ind(io, idx))
 
 """
     readframetrcs(io, idx...)
@@ -1427,6 +1432,7 @@ trcs = readframetrcs(jsopen("data_5D.js"), frm_idx, vol_idx, hyp_idx)
 ```
 """
 readframetrcs(io::JSeis, idx::Int...) = readframetrcs_impl(io, sub2ind(io, idx))
+readframetrcs(io::JSeis, idx::CartesianIndex) = readframetrcs_impl(io, sub2ind(io, idx))
 
 """
     readframehdrs!(io, hdrs, idx...)
@@ -1462,6 +1468,7 @@ readframehdrs!(io, hdrs, frm_idx, vol_idx, hyp_idx)
 ```
 """
 readframehdrs!(io::JSeis, hdrs::AbstractArray{UInt8,2}, idx::Int...) = readframehdrs_impl!(io, hdrs, sub2ind(io, idx))
+readframehdrs!(io::JSeis, hdrs::AbstractArray{UInt8,2}, idx::CartesianIndex) = readframehdrs_impl!(io, hdrs, sub2ind(io, idx))
 
 """
 readframehdrs(io, idx...)
@@ -1492,16 +1499,21 @@ hdrs = readframehdrs(jsopen("data_5D.js"), frm_idx, vol_idx, hyp_idx)
 """
 readframehdrs(io::JSeis, idx::Int...) = readframehdrs_impl(io, sub2ind(io, idx))
 
-function parserngs(io::JSeis, smprng::Union{Int,Range{Int},Colon}, trcrng::Union{Int,Range{Int},Colon}, rng::Union{Int,Range{Int},Colon}...)
-    smprng = isa(smprng, Colon) ? lrange(io,1) : smprng
-    smprng = isa(smprng, Int) ? (smprng:1:smprng) : smprng
-    trcrng = isa(trcrng, Colon) ? lrange(io,2) : trcrng
-    trcrng = isa(trcrng, Int) ? (trcrng:1:trcrng) : trcrng
-    rng = ntuple(i->isa(rng[i],Colon) ? lrange(io,2+i) : rng[i], length(rng))
-    rng = ntuple(i->isa(rng[i],Int) ? (rng[i]:1:rng[i]) : rng[i], length(rng))
-    nrng = ntuple(i->length(rng[i]), length(rng))
-    smprng, trcrng, rng, nrng
+function parserngs{N}(io::JSeis, smprng::Union{Int,Range{Int},Colon}, trcrng::Union{Int,Range{Int},Colon}, rng::Vararg{Union{Int,Range{Int},Colon},N})
+    smprng = parserng(io, smprng, 1)
+    trcrng = parserng(io, trcrng, 2)
+    rng = ntuple(i->parserng(io, rng[i], 2+i), N)
+    nrng = ntuple(i->length(rng[i]), N)::NTuple{N,Int}
+    smprng::StepRange{Int,Int}, trcrng::StepRange{Int,Int}, rng::NTuple{N,StepRange{Int,Int}}, nrng::NTuple{N,Int}
 end
+parserng(io::JSeis,rng::Int,i) = StepRange(rng:1:rng)
+parserng(io::JSeis,rng::Range{Int},i) = StepRange(rng)
+parserng(io::JSeis,rng::Colon,i) = lrange(io,i)::StepRange{Int,Int}
+
+parseindex(rng::Tuple{Range}, idx_n::CartesianIndex{1}) = CartesianIndex(rng[1][idx_n[1]])
+parseindex(rng::Tuple{Range,Range}, idx_n::CartesianIndex{2}) = CartesianIndex(rng[1][idx_n[1]],rng[2][idx_n[2]])
+parseindex(rng::Tuple{Range,Range,Range}, idx_n::CartesianIndex{3}) = CartesianIndex(rng[1][idx_n[1]],rng[2][idx_n[2]],rng[3][idx_n[3]])
+parseindex{N}(rng::NTuple{N,Range}, idx_n::CartesianIndex) = CartesianIndex(ntuple(i->rng[i][idx_n[i]], length(rng)))
 
 function collect(io::JSeis, rng::Range{Int}, dim::Int)
     collect(div(rng[1]    - io.axis_lstarts[dim],io.axis_lincs[dim])+1:
@@ -1509,15 +1521,15 @@ function collect(io::JSeis, rng::Range{Int}, dim::Int)
             div(rng[end]  - io.axis_lstarts[dim],io.axis_lincs[dim])+1)
 end
 
-function readtrcs_impl!(io::JSeis, trcs::AbstractArray{Float32}, smprng::Range{Int}, trcrng::Range{Int}, rng::Range{Int}...)
+function readtrcs_impl!{N}(io::JSeis, trcs::AbstractArray{Float32}, smprng::Range{Int}, trcrng::Range{Int}, rng::Vararg{Union{Colon,Int,Range{Int}},N})
     frmtrcs, frmhdrs = allocframe(io)
     frm_smprng = collect(io, smprng, 1)
     frm_trcrng = collect(io, trcrng, 2)
 
-    n = ntuple(i->length(rng[i]), length(rng))
+    n = ntuple(i->length(rng[i]), N)::NTuple{N,Int}
     for idx_n in CartesianRange(n)
-        idx = ntuple(i->rng[i][idx_n[i]], length(n))
-        if fold(io, idx...) == size(io,2)
+        idx = parseindex(rng, idx_n)
+        if fold(io, idx) == size(io,2)
             readframetrcs_impl!(io, frmtrcs, sub2ind(io, idx))
         else
             readframe_impl!(io, frmtrcs, frmhdrs, sub2ind(io, idx))
@@ -1529,13 +1541,13 @@ function readtrcs_impl!(io::JSeis, trcs::AbstractArray{Float32}, smprng::Range{I
     end
 end
 
-function readhdrs_impl!(io::JSeis, hdrs::AbstractArray{UInt8}, trcrng::Range{Int}, rng::Range{Int}...)
+function readhdrs_impl!{N}(io::JSeis, hdrs::AbstractArray{UInt8}, trcrng::Range{Int}, rng::Vararg{Union{Colon,Int,Range{Int}},N})
     frmhdrs = allocframehdrs(io)
     frm_trcrng = collect(io, trcrng, 2)
 
-    n = ntuple(i->length(rng[i]), length(rng))
+    n = ntuple(i->length(rng[i]), length(rng))::NTuple{N,Int}
     for idx_n in CartesianRange(n)
-        idx = ntuple(i->rng[i][idx_n[i]], length(n))
+        idx = parseindex(rng, idx_n)
         readframehdrs_impl!(io, frmhdrs, sub2ind(io, idx))
         if fold(io, frmhdrs) < size(io, 2)
             regularize!(io, frmhdrs)
@@ -1546,182 +1558,27 @@ function readhdrs_impl!(io::JSeis, hdrs::AbstractArray{UInt8}, trcrng::Range{Int
     end
 end
 
-function read_impl!(io::JSeis, trcs::AbstractArray{Float32}, hdrs::AbstractArray{UInt8}, smprng::Range{Int}, trcrng::Range{Int}, rng::Range{Int}...)
+function read_impl!{N}(io::JSeis, trcs::AbstractArray{Float32}, hdrs::AbstractArray{UInt8}, smprng::Range{Int}, trcrng::Range{Int}, rng::Vararg{Range{Int}, N})
     frmtrcs, frmhdrs = allocframe(io)
     frm_smprng = collect(io, smprng, 1)
     frm_trcrng = collect(io, trcrng, 2)
-
-    n = ntuple(i->length(rng[i]), length(rng))
+    n = ntuple(i->length(rng[i]), N)::NTuple{N,Int}
     for idx_n in CartesianRange(n)
-        idx = ntuple(i->rng[i][idx_n[i]], length(n))
+        idx = parseindex(rng, idx_n)
         readframe_impl!(io, frmtrcs, frmhdrs, sub2ind(io, idx))
-        if fold(io, idx...) < size(io, 2)
+        if fold(io, idx) < size(io, 2)
             regularize!(io, frmtrcs, frmhdrs)
         end
         for (itrc,trc) in enumerate(frm_trcrng)
-            hdrs[:,itrc,idx_n] = frmhdrs[:,frm_trcrng[itrc]]
+            for ismp = 1:size(hdrs,1)
+                hdrs[ismp,itrc,idx_n] = frmhdrs[ismp,frm_trcrng[itrc]]
+            end
             for (ismp,smp) in enumerate(frm_smprng)
                 trcs[ismp,itrc,idx_n] = frmtrcs[smp,trc]
             end
         end
     end
-end
-
-# fast code paths for 3, 4 and 5 dimensions
-function readtrcs_impl!(io::JSeis, trcs::AbstractArray{Float32,3}, smprng::Range{Int}, trcrng::Range{Int}, frmrng::Range{Int})
-    frmtrcs, frmhdrs = allocframe(io)
-    frm_smprng = collect(io, smprng, 1)
-    frm_trcrng = collect(io, trcrng, 2)
-
-    for (ifrm,frm) in enumerate(frmrng)
-        if fold(io, frm) == size(io,2)
-            readframetrcs_impl!(io, frmtrcs, sub2ind(io, (frm,)))
-        else
-            readframe_impl!(io, frmtrcs, frmhdrs, sub2ind(io, (frm,)))
-            regularize!(io, frmtrcs, frmhdrs)
-        end
-        for (itrc,trc) in enumerate(frm_trcrng), (ismp,smp) in enumerate(frm_smprng)
-            trcs[ismp,itrc,ifrm] = frmtrcs[smp,trc]
-        end
-    end
-end
-function readtrcs_impl!(io::JSeis, trcs::AbstractArray{Float32,4}, smprng::Range{Int}, trcrng::Range{Int}, frmrng::Range{Int}, volrng::Range{Int})
-    frmtrcs, frmhdrs = allocframe(io)
-    frm_smprng = collect(io, smprng, 1)
-    frm_trcrng = collect(io, trcrng, 2)
-
-    for (ivol,vol) in enumerate(volrng), (ifrm,frm) in enumerate(frmrng)
-        if fold(io, frm, vol) == size(io,2)
-            readframetrcs_impl!(io, frmtrcs, sub2ind(io, (frm,vol)))
-        else
-            readframe_impl!(io, frmtrcs, frmhdrs, sub2ind(io, (frm,vol)))
-            regularize!(io, frmtrcs, frmhdrs)
-        end
-        for (itrc,trc) in enumerate(frm_trcrng), (ismp,smp) in enumerate(frm_smprng)
-            trcs[ismp,itrc,ifrm,ivol] = frmtrcs[smp,trc]
-        end
-    end
-end
-function readtrcs_impl!(io::JSeis, trcs::AbstractArray{Float32,5}, smprng::Range{Int}, trcrng::Range{Int}, frmrng::Range{Int}, volrng::Range{Int}, hyprng::Range{Int})
-    frmtrcs, frmhdrs = allocframe(io)
-    frm_smprng = collect(io, smprng, 1)
-    frm_trcrng = collect(io, trcrng, 2)
-
-    for (ihyp,hyp) in enumerate(hyprng), (ivol,vol) in enumerate(volrng), (ifrm,frm) in enumerate(frmrng)
-        if fold(io, frm, vol, hyp) == size(io,2)
-            readframetrcs_impl!(io, frmtrcs, sub2ind(io, (frm,vol,hyp)))
-        else
-            readframe_impl!(io, frmtrcs, frmhdrs, sub2ind(io, (frm,vol,hyp)))
-            regularize!(io, frmtrcs, frmhdrs)
-        end
-        for (itrc,trc) in enumerate(frm_trcrng), (ismp,smp) in enumerate(frm_smprng)
-            trcs[ismp,itrc,ifrm,ivol,ihyp] = frmtrcs[smp,trc]
-        end
-    end
-end
-
-function readhdrs_impl!(io::JSeis, hdrs::AbstractArray{UInt8,3}, trcrng::Range{Int}, frmrng::Range{Int})
-    frmhdrs = allocframehdrs(io)
-    frm_trcrng = collect(io, trcrng, 2)
-
-    for (ifrm,frm) in enumerate(frmrng)
-        readframehdrs_impl!(io, frmhdrs, sub2ind(io, (frm,)))
-        if fold(io, frmhdrs) < size(io, 2)
-            regularize!(io, frmhdrs)
-        end
-        for (itrc,trc) in enumerate(frm_trcrng)
-            hdrs[:,itrc,ifrm] = frmhdrs[:,trc]
-        end
-    end
-end
-function readhdrs_impl!(io::JSeis, hdrs::AbstractArray{UInt8,4}, trcrng::Range{Int}, frmrng::Range{Int}, volrng::Range{Int})
-    frmhdrs = allocframehdrs(io)
-    frm_trcrng = collect(io, trcrng, 2)
-
-    for (ivol,vol) in enumerate(volrng), (ifrm,frm) in enumerate(frmrng)
-        readframehdrs_impl!(io, frmhdrs, sub2ind(io, (frm,vol)))
-        if fold(io, frmhdrs) < size(io, 2)
-            regularize!(io, frmhdrs)
-        end
-        for (itrc,trc) in enumerate(frm_trcrng)
-            hdrs[:,itrc,ifrm,ivol] = frmhdrs[:,trc]
-        end
-    end
-end
-function readhdrs_impl!(io::JSeis, hdrs::AbstractArray{UInt8,5}, trcrng::Range{Int}, frmrng::Range{Int}, volrng::Range{Int}, hyprng::Range{Int})
-    frmhdrs = allocframehdrs(io)
-    frm_trcrng = collect(io, trcrng, 2)
-
-    for (ihyp,hyp) in enumerate(hyprng), (ivol,vol) in enumerate(volrng), (ifrm,frm) in enumerate(frmrng)
-        readframehdrs_impl!(io, frmhdrs, sub2ind(io, (frm,vol,hyp)))
-        if fold(io, frmhdrs) < size(io, 2)
-            regularize!(io, frmhdrs)
-        end
-        for (itrc,trc) in enumerate(frm_trcrng)
-            hdrs[:,itrc,ifrm,ivol,ihyp] = frmhdrs[:,trc]
-        end
-    end
-end
-
-function read_impl!(io::JSeis, trcs::AbstractArray{Float32,3}, hdrs::AbstractArray{UInt8,3}, smprng::Range{Int}, trcrng::Range{Int}, frmrng::Range{Int})
-    frmtrcs, frmhdrs = allocframe(io)
-    frm_smprng = collect(io, smprng, 1)
-    frm_trcrng = collect(io, trcrng, 2)
-
-    for (ifrm,frm) in enumerate(frmrng)
-        readframe_impl!(io, frmtrcs, frmhdrs, sub2ind(io, (frm,)))
-        if fold(io, frm) < size(io, 2)
-            regularize!(io, frmtrcs, frmhdrs)
-        end
-        for (itrc,trc) in enumerate(frm_trcrng)
-            for ismp = 1:size(hdrs,1)
-                hdrs[ismp,itrc,ifrm] = frmhdrs[ismp,trc]
-            end
-            for (ismp,smp) in enumerate(frm_smprng)
-                trcs[ismp,itrc,ifrm] = frmtrcs[smp,trc]
-            end
-        end
-    end
-end
-function read_impl!(io::JSeis, trcs::AbstractArray{Float32,4}, hdrs::AbstractArray{UInt8,4}, smprng::Range{Int}, trcrng::Range{Int}, frmrng::Range{Int}, volrng::Range{Int})
-    frmtrcs, frmhdrs = allocframe(io)
-    frm_smprng = collect(io, smprng, 1)
-    frm_trcrng = collect(io, trcrng, 2)
-
-    for (ivol,vol) in enumerate(volrng), (ifrm,frm) in enumerate(frmrng)
-        readframe_impl!(io, frmtrcs, frmhdrs, sub2ind(io, (frm, vol)))
-        if fold(io, frm, vol) < size(io, 2)
-            regularize!(io, frmtrcs, frmhdrs)
-        end
-        for (itrc,trc) in enumerate(frm_trcrng)
-            for ismp = 1:size(hdrs,1)
-	            hdrs[ismp,itrc,ifrm,ivol] = frmhdrs[ismp,trc]
-            end
-            for (ismp,smp) in enumerate(frm_smprng)
-                trcs[ismp,itrc,ifrm,ivol] = frmtrcs[smp,trc]
-            end
-        end
-    end
-end
-function read_impl!(io::JSeis, trcs::AbstractArray{Float32,5}, hdrs::AbstractArray{UInt8,5}, smprng::Range{Int}, trcrng::Range{Int}, frmrng::Range{Int}, volrng::Range{Int}, hyprng::Range{Int})
-    frmtrcs, frmhdrs = allocframe(io)
-    frm_smprng = collect(io, smprng, 1)
-    frm_trcrng = collect(io, trcrng, 2)
-
-    for (ihyp,hyp) in enumerate(hyprng), (ivol,vol) in enumerate(volrng), (ifrm,frm) in enumerate(frmrng)
-        readframe_impl!(io, frmtrcs, frmhdrs, sub2ind(io, (frm, vol, hyp)))
-        if fold(io, frm, vol, hyp) < size(io, 2)
-            regularize!(io, frmtrcs, frmhdrs)
-        end
-        for (itrc,trc) in enumerate(frm_trcrng)
-            for ismp = 1:size(hdrs,1)
-	            hdrs[ismp,itrc,ifrm,ivol,ihyp] = frmhdrs[ismp,trc]
-            end
-            for (ismp,smp) in enumerate(frm_smprng)
-                trcs[ismp,itrc,ifrm,ivol,ihyp] = frmtrcs[smp,trc]
-            end
-        end
-    end
+    nothing
 end
 
 """
@@ -1750,10 +1607,10 @@ readtrcs!(jsopen("data_5D.js"), trcs, :, :, :, :, :)
 readtrcs!(jsopen("data_5D.js"), trcs, :, :, 2, 2:2:10, 1:10)
 ```
 """
-function readtrcs!(io::JSeis, trcs::AbstractArray{Float32}, smprng::Union{Int,Range{Int},Colon}, trcrng::Union{Int,Range{Int},Colon}, rng::Union{Int,Range{Int},Colon}...)
-    smprng, trcrng, rng, nrng = parserngs(io, smprng, trcrng, rng...)
+function readtrcs!{N}(io::JSeis, trcs::AbstractArray{Float32}, rng::Vararg{Union{Int,Range{Int},Colon},N})
+    smprng, trcrng, _rng, nrng = parserngs(io, rng...)
     @assert size(trcs)[1:2] == (length(smprng), length(trcrng)) && size(trcs)[3:end] == nrng
-    readtrcs_impl!(io, trcs, smprng, trcrng, rng...)
+    readtrcs_impl!(io, trcs, smprng, trcrng, _rng...)
 end
 
 """
@@ -1783,44 +1640,45 @@ trcs = readtrcs(jsopen("data_5D.js"), :, :, :, :, :)
 trcs = readtrcs(jsopen("data_5D.js"), :, :, 2, 2:2:10, 1:10)
 ```
 """
-function readtrcs(io::JSeis, smprng::Union{Int,Range{Int},Colon}, trcrng::Union{Int,Range{Int},Colon}, rng::Union{Int,Range{Int},Colon}...)
-    smprng, trcrng, rng, nrng = parserngs(io, smprng, trcrng, rng...)
+function readtrcs{N}(io::JSeis, rng::Vararg{Union{Int,Range{Int},Colon},N})
+    smprng, trcrng, _rng, nrng = parserngs(io, rng...)
     trcs = Array{Float32}(length(smprng), length(trcrng), nrng...)
-    readtrcs_impl!(io, trcs, smprng, trcrng, rng...)
+    readtrcs_impl!(io, trcs, smprng, trcrng, _rng...)
     trcs
 end
 
 """
-    readhdrs!(io, hdrs, trace_range, range...)
+    readhdrs!(io, hdrs, smp_range, trace_range, range...)
 
 In-place read of a subset of data (headers only) from a JavaSeis file. If performance is important, then consider using `readframehdrs!` instead.  Examples:
 
 # 3D:
 
 ```julia
-readhdrs!(jsopen("data_3D.js"), hdrs, :, :)
-readhdrs!(jsopen("data_3D.js"), hdrs, 1:2:end, 1:5)
+readhdrs!(jsopen("data_3D.js"), hdrs, :, :, :)
+readhdrs!(jsopen("data_3D.js"), hdrs, :, 1:2:end, 1:5)
 ```
 
 # 4D:
 
 ```julia
-readhdrs!(jsopen("data_4D.js"), hdrs, :, :, :)
-readhdrs!(jsopen("data_4D.js"), hdrs, :, 2, 2:2:10)
+readhdrs!(jsopen("data_4D.js"), hdrs, :, :, :, :)
+readhdrs!(jsopen("data_4D.js"), hdrs, :, :, 2, 2:2:10)
 ```
 
 # 5D:
 
 
 ```julia
-readhdrs!(jsopen("data_5D.js"), hdrs, :, :, :, :)
-readhdrs!(jsopen("data_5D.js"), hdrs, :, 2, 2:2:10, 1:10)
+readhdrs!(jsopen("data_5D.js"), hdrs, :, :, :, :, :)
+readhdrs!(jsopen("data_5D.js"), hdrs, :, :, 2, 2:2:10, 1:10)
 ```
 """
-function readhdrs!(io::JSeis, hdrs::AbstractArray{UInt8}, trcrng::Union{Int,Range{Int},Colon}, rng::Union{Int,Range{Int},Colon}...)
-    smprng, trcrng, rng, nrng = parserngs(io, :, trcrng, rng...)
+function readhdrs!{N}(io::JSeis, hdrs::AbstractArray{UInt8}, rng::Vararg{Union{Int,Range{Int},Colon},N})
+    @assert rng[1] == Colon()
+    smprng, trcrng, _rng, nrng = parserngs(io, rng...)
     @assert size(hdrs,1) == headerlength(io) && size(hdrs,2) == length(trcrng) && size(hdrs)[3:end] == nrng
-    readhdrs_impl!(io, hdrs, trcrng, rng...)
+    readhdrs_impl!(io, hdrs, trcrng, _rng...)
 end
 
 """
@@ -1849,10 +1707,11 @@ hdrs = readhdrs(jsopen("data_5D.js"), :, :, :, :, :)
 hdrs = readhdrs(jsopen("data_5D.js"), :, :, 2, 2:2:10, 1:10)
 ```
 """
-function readhdrs(io::JSeis, trcrng::Union{Int,Range{Int},Colon}, rng::Union{Int,Range{Int},Colon}...)
-    smprng, trcrng, rng, nrng = parserngs(io, :, trcrng, rng...)
-    hdrs = Array{UInt8}(headerlength(io), length(trcrng), nrng...)
-    readhdrs_impl!(io, hdrs, trcrng, rng...)
+function readhdrs{N}(io::JSeis, rng::Vararg{Union{Int,Range{Int},Colon},N})
+    @assert rng[1] == Colon()
+    smprng, trcrng, _rng, nrng = parserngs(io, rng...)
+    hdrs = Array{UInt8,N}(headerlength(io), length(trcrng), nrng...)
+    readhdrs_impl!(io, hdrs, trcrng, _rng...)
     hdrs
 end
 
@@ -1882,11 +1741,11 @@ read!(jsopen("data_5D.js"), trcs, hdrs, :, :, :, :, :)
 read!(jsopen("data_5D.js"), trcs, hdrs, :, :, 2, 2:2:10, 1:10)
 ```
 """
-function read!(io::JSeis, trcs::AbstractArray{Float32}, hdrs::AbstractArray{UInt8}, smprng::Union{Int,Range{Int},Colon}, trcrng::Union{Int,Range{Int},Colon}, rng::Union{Int,Range{Int},Colon}...)
-    smprng, trcrng, rng, nrng = parserngs(io, smprng, trcrng, rng...)
+function read!{N}(io::JSeis, trcs::AbstractArray{Float32}, hdrs::AbstractArray{UInt8}, rng::Vararg{Union{Int,Range{Int},Colon}, N})
+    smprng, trcrng, _rng, nrng = parserngs(io, rng...)
     @assert size(trcs)[1:2] == (length(smprng), length(trcrng)) && size(trcs)[3:end] == nrng
     @assert size(hdrs,1) == headerlength(io) && size(hdrs,2) == length(trcrng) && size(hdrs)[3:end] == nrng
-    read_impl!(io, trcs, hdrs, smprng, trcrng, rng...)
+    read_impl!(io, trcs, hdrs, smprng, trcrng, _rng...)
 end
 
 """
@@ -1915,11 +1774,11 @@ trcs, hdrs = read(jsopen("data_5D.js"), :, :, :, :, :)
 trcs, hdrs = read(jsopen("data_5D.js"), :, :, 2, 2:2:10, 1:10)
 ```
 """
-function read(io::JSeis, smprng::Union{Int,Range{Int},Colon}, trcrng::Union{Int,Range{Int},Colon}, rng::Union{Int,Range{Int},Colon}...)
-    smprng, trcrng, rng, nrng = parserngs(io, smprng, trcrng, rng...)
-    trcs = Array{Float32}(length(smprng), length(trcrng), nrng...)
-    hdrs = Array{UInt8}(headerlength(io), length(trcrng), nrng...)
-    read_impl!(io, trcs, hdrs, smprng, trcrng, rng...)
+function read{N}(io::JSeis, rng::Vararg{Union{Int,Range{Int},Colon},N})
+    smprng, trcrng, _rng, nrng = parserngs(io, rng...)
+    trcs = Array{Float32}(length(smprng), length(trcrng), nrng...)::Array{Float32,N}
+    hdrs = Array{UInt8}(headerlength(io), length(trcrng), nrng...)::Array{UInt8,N}
+    read_impl!(io, trcs, hdrs, smprng, trcrng, _rng...)
     trcs, hdrs
 end
 
@@ -2015,6 +1874,7 @@ function writeframe(io::JSeis, trcs::AbstractArray{Float32, 2}, idx::Int...)
     writeframe_impl(io, trcs, hdrs, Int(io.axis_lengths[2]), sub2ind(io, idx))
 end
 writeframe(io::JSeis, trcs::AbstractArray{Float64, 2}, idx::Int...) = writeframe(io, convert(Array{Float32, 2}, trcs), idx...)
+writeframe(io::JSeis, trcs::AbstractArray{Float32, 2}, idx::CartesianIndex) = writeframe(io, trcs, idx.I...)
 
 """
     write(io, trcs, hdrs[, smprng=:])
@@ -2023,30 +1883,25 @@ Write `trcs` and `hdrs` to the file corresponding to `io::JSeis`.  Optionally, y
 The locations that are written to are determined by the values corresponding to the framework headers `hdrs`.  Note that
 the dimension of the arrays `trcs` and `hdrs` must match the number of dimensions in the framework.
 """
-function write(io::JSeis, trcs::AbstractArray{Float32}, hdrs::AbstractArray{UInt8}, smprng::Union{Colon,Int,Range{Int}}=:)
-    n = size(trcs)
-    ntrcs = n[2]
-    nrest = n[3:end]
+write(io::JSeis, trcs::AbstractArray{Float32}, hdrs::AbstractArray{UInt8}, smprng::Union{Colon,Int,Range{Int}}=:) = write_trcshdrs_helper(io, trcs, hdrs, smprng, ntuple(i->size(trcs,2+i), ndims(trcs)-2))
+write(io::JSeis, trcs::AbstractArray{Float64}, hdrs::AbstractArray{UInt8}, smprng::Union{Colon,Int,Range{Int}}=:) = write(io, convert(Array{Float32}, trcs), hdrs, smprng)
+
+function write_trcshdrs_helper{N}(io::JSeis, trcs, hdrs, smprng, nrest::NTuple{N,Int})
+    ntrcs = size(trcs,2)
     hdrlen = headerlength(io)
-    smprng = isa(smprng,Colon) ? (io.axis_lstarts[1]:(io.axis_lstarts[1]+io.axis_lengths[1]-1)) : smprng
-    smprng = isa(smprng,Int) ? (smprng:smprng) : smprng
+    _smprng = parserng(io, smprng, 1)
 
     frmtrcs, frmhdrs = allocframe(io)
     trcprop = props(io, 2)
-    frm_smprng = collect(io, smprng, 1)
+    frm_smprng = collect(io, _smprng, 1)
 
-    write_helper(io, trcs, hdrs, ntrcs, nrest, hdrlen, smprng, frmtrcs, frmhdrs, trcprop, frm_smprng)
-end
-write(io::JSeis, trcs::AbstractArray{Float64}, hdrs::AbstractArray{UInt8}, smprng::Union{Colon,Int,Range{Int}}=:) = write(io, convert(Array{Float32}, trcs), hdrs, smprng)
-
-function write_helper(io::JSeis, trcs::AbstractArray{Float32}, hdrs::AbstractArray{UInt8}, ntrcs::Int, nrest::NTuple, hdrlen::Int, smprng::Range, frmtrcs::Array{Float32,2}, frmhdrs::Array{UInt8,2}, trcprop::TraceProperty, frm_smprng::Array{Int,1})
     for idx in CartesianRange(nrest)
         if length(smprng) != io.axis_lengths[1] || size(trcs,2) != io.axis_lengths[2]
-            readframe_impl!(io, frmtrcs, frmhdrs, sub2ind(io, hdrs[:,:,idx]))
+            readframe_impl!(io, frmtrcs, frmhdrs, sub2ind(io, @view(hdrs[:,:,idx.I...])))
             regularize!(io, frmtrcs, frmhdrs)
         end
         for itrc = 1:ntrcs
-            itrc_frm = div(get(trcprop, hdrs[:,itrc,idx]) - io.axis_lstarts[2], io.axis_lincs[2]) + 1
+            itrc_frm = div(get(trcprop, @view(hdrs[:,itrc,idx.I...])) - io.axis_lstarts[2], io.axis_lincs[2]) + 1
             for (ismp,smp) in enumerate(frm_smprng)
                 frmtrcs[smp,itrc_frm] = trcs[ismp,itrc,idx]
             end
@@ -2083,128 +1938,47 @@ write(io, trcs, :, :, :, :)
 write(io, trcs, :, :, :, :, :)
 ```
 """
-function write(io::JSeis, trcs::AbstractArray{Float32}, smprng::Union{Colon,Int,Range{Int}}, trcrng::Union{Colon,Int,Range{Int}}, rng::Union{Colon,Int,Range{Int}}...)
-    @assert ndims(trcs) == 2 + length(rng)
+function write{N}(io::JSeis, trcs::AbstractArray{Float32}, rng::Vararg{Union{Colon,Int,Range{Int}},N})
+    @assert ndims(trcs) == length(rng)
 
-    smprng, trcrng, rng, nrng = parserngs(io, smprng, trcrng, rng...)
+    smprng, trcrng, _rng, nrng = parserngs(io, rng...)
     @assert size(trcs,1) == length(smprng)
     @assert size(trcs,2) == length(trcrng)
-    for i = 1:length(rng)
-        @assert size(trcs,2+i) == length(rng[i])
+    for i = 1:length(_rng)
+        @assert size(trcs,2+i) == length(_rng[i])
     end
 
     frmtrcs = allocframetrcs(io)
     frm_smprng = collect(io, smprng, 1)
     frm_trcrng = collect(io, trcrng, 2)
 
-    write_helper(io, trcs, smprng, trcrng, rng, frmtrcs, frm_smprng, frm_trcrng)
+    write_helper(io, trcs, frmtrcs, frm_smprng, frm_trcrng, smprng, nrng, _rng) # split-out to help type inference
 end
 write(io::JSeis, trcs::AbstractArray{Float64}, smprng::Union{Colon,Int,Range{Int}}, trcrng::Union{Colon,Int,Range{Int}}, rng::Union{Colon,Int,Range{Int}}...) = write(io, convert(Array{Float32}, trcs), smprng, trcrng, rng...)
 
-function write_helper(io::JSeis, trcs::AbstractArray{Float32}, smprng::Range, trcrng::Range, rng::NTuple, frmtrcs::Array{Float32,2}, frm_smprng::Array{Int,1}, frm_trcrng::Array{Int,1})
-    n = ntuple(i->length(rng[i]), length(rng))
+function write_helper{N}(io::JSeis, trcs, frmtrcs, frm_smprng, frm_trcrng, smprng, nrng, _rng::NTuple{N,StepRange{Int,Int}})
+    n = ntuple(i->length(_rng[i]), N)::NTuple{N,Int}
+
+    frmhdrs = allocframehdrs(io)
+    prop_trctype = prop(io, stockprop[:TRC_TYPE])
+    map(itrace->set!(prop_trctype, frmhdrs, itrace, tracetype[:live]), 1:size(io,2))
+
     for idx_n in CartesianRange(n)
-        idx = ntuple(i->rng[i][idx_n[i]], length(n))
+        idx = parseindex(_rng, idx_n)
         if length(smprng) != io.axis_lengths[1] || size(trcs,2) != io.axis_lengths[2]
-            readframetrcs!(io, frmtrcs, idx...)
+            readframetrcs_impl!(io, frmtrcs, sub2ind(io,idx))
         end
         for (itrc,trc) in enumerate(frm_trcrng), (ismp,smp) in enumerate(frm_smprng)
             frmtrcs[smp,trc] = trcs[ismp,itrc,idx_n]
         end
-        writeframe(io, frmtrcs, idx...)
-    end
-end
 
-# fast code paths for 3, 4 and 5 dimensions
-function write_helper(io::JSeis, trcs::AbstractArray{Float32,3}, hdrs::AbstractArray{UInt8,3}, ntrcs::Int, nrest::NTuple, hdrlen::Int, smprng::Range, frmtrcs::Array{Float32,2}, frmhdrs::Array{UInt8,2}, trcprop::TraceProperty, frm_smprng::Array{Int,1})
-    for ifrm = 1:nrest[1]
-        if length(smprng) != io.axis_lengths[1] || size(trcs,2) != io.axis_lengths[2]
-            readframe_impl!(io, frmtrcs, frmhdrs, sub2ind(io, hdrs[:,:,ifrm]))
-            regularize!(io, frmtrcs, frmhdrs)
-        end
-        for itrc = 1:ntrcs
-            itrc_frm = div(get(trcprop, hdrs[:,itrc,ifrm]) - io.axis_lstarts[2], io.axis_lincs[2]) + 1
-            for (ismp,smp) in enumerate(frm_smprng)
-                frmtrcs[smp,itrc_frm] = trcs[ismp,itrc,ifrm]
-            end
-            for ismp = 1:hdrlen
-                frmhdrs[ismp,itrc_frm] = hdrs[ismp,itrc,ifrm]
+        for itrace = 1:io.axis_lengths[2]
+            set!(props(io,2), frmhdrs, itrace, lstarts(io,2) + (itrace-1)*lincs(io,2))
+            for idim = 3:ndims(io)
+                set!(props(io,idim), frmhdrs, itrace, idx[idim-2])
             end
         end
-        leftjustify!(io, frmtrcs, frmhdrs)
         writeframe(io, frmtrcs, frmhdrs)
-    end
-end
-function write_helper(io::JSeis, trcs::AbstractArray{Float32,4}, hdrs::AbstractArray{UInt8,4}, ntrcs::Int, nrest::NTuple, hdrlen::Int, smprng::Range, frmtrcs::Array{Float32,2}, frmhdrs::Array{UInt8,2}, trcprop::TraceProperty, frm_smprng::Array{Int,1})
-    for ivol = 1:nrest[2], ifrm = 1:nrest[1]
-        if length(smprng) != io.axis_lengths[1] || size(trcs,2) != io.axis_lengths[2]
-            readframe_impl!(io, frmtrcs, frmhdrs, sub2ind(io, hdrs[:,:,ifrm,ivol]))
-            regularize!(io, frmtrcs, frmhdrs)
-        end
-        for itrc = 1:ntrcs
-            itrc_frm = div(get(trcprop, hdrs[:,itrc,ifrm,ivol]) - io.axis_lstarts[2], io.axis_lincs[2]) + 1
-            for (ismp,smp) in enumerate(frm_smprng)
-                frmtrcs[smp,itrc_frm] = trcs[ismp,itrc,ifrm,ivol]
-            end
-            for ismp = 1:hdrlen
-                frmhdrs[ismp,itrc_frm] = hdrs[ismp,itrc,ifrm,ivol]
-            end
-        end
-        leftjustify!(io, frmtrcs, frmhdrs)
-        writeframe(io, frmtrcs, frmhdrs)
-    end
-end
-function write_helper(io::JSeis, trcs::AbstractArray{Float32,5}, hdrs::AbstractArray{UInt8,5}, ntrcs::Int, nrest::NTuple, hdrlen::Int, smprng::Range, frmtrcs::Array{Float32,2}, frmhdrs::Array{UInt8,2}, trcprop::TraceProperty, frm_smprng::Array{Int,1})
-    for ihyp = 1:nrest[3], ivol = 1:nrest[2], ifrm = 1:nrest[1]
-        if length(smprng) != io.axis_lengths[1] || size(trcs,2) != io.axis_lengths[2]
-            readframe_impl!(io, frmtrcs, frmhdrs, sub2ind(io, hdrs[:,:,ifrm,ivol,ihyp]))
-            regularize!(io, frmtrcs, frmhdrs)
-        end
-        for itrc = 1:ntrcs
-            itrc_frm = div(get(trcprop, hdrs[:,itrc,ifrm,ivol,ihyp]) - io.axis_lstarts[2], io.axis_lincs[2]) + 1
-            for (ismp,smp) in enumerate(frm_smprng)
-                frmtrcs[smp,itrc_frm] = trcs[ismp,itrc,ifrm,ivol,ihyp]
-            end
-            for ismp = 1:hdrlen
-                frmhdrs[ismp,itrc_frm] = hdrs[ismp,itrc,ifrm,ivol,ihyp]
-            end
-        end
-        leftjustify!(io, frmtrcs, frmhdrs)
-        writeframe(io, frmtrcs, frmhdrs)
-    end
-end
-
-function write_helper(io::JSeis, trcs::AbstractArray{Float32,3}, smprng::Range, trcrng::Range, rng::NTuple, frmtrcs::Array{Float32,2}, frm_smprng::Array{Int,1}, frm_trcrng::Array{Int,1})
-    for (ifrm,frm) in enumerate(rng[1])
-        if length(smprng) != io.axis_lengths[1] || size(trcs,2) != io.axis_lengths[2]
-            readframetrcs!(io, frmtrcs, frm)
-        end
-        for (itrc,trc) in enumerate(frm_trcrng), (ismp,smp) in enumerate(frm_smprng)
-            frmtrcs[smp,trc] = trcs[ismp,itrc,ifrm]
-        end
-        writeframe(io, frmtrcs, frm)
-    end
-end
-function write_helper(io::JSeis, trcs::AbstractArray{Float32,4}, smprng::Range, trcrng::Range, rng::NTuple, frmtrcs::Array{Float32,2}, frm_smprng::Array{Int,1}, frm_trcrng::Array{Int,1})
-    for (ivol,vol) in enumerate(rng[2]), (ifrm,frm) in enumerate(rng[1])
-        if length(smprng) != io.axis_lengths[1] || size(trcs,2) != io.axis_lengths[2]
-            readframetrcs!(io, frmtrcs, frm, vol)
-        end
-        for (itrc,trc) in enumerate(frm_trcrng), (ismp,smp) in enumerate(frm_smprng)
-            frmtrcs[smp,trc] = trcs[ismp,itrc,ifrm,ivol]
-        end
-        writeframe(io, frmtrcs, frm, vol)
-    end
-end
-function write_helper(io::JSeis, trcs::AbstractArray{Float32,5}, smprng::Range, trcrng::Range, rng::NTuple, frmtrcs::Array{Float32,2}, frm_smprng::Array{Int,1}, frm_trcrng::Array{Int,1})
-    for (ihyp,hyp) in enumerate(rng[3]), (ivol,vol) in enumerate(rng[2]), (ifrm,frm) in enumerate(rng[1])
-        if length(smprng) != io.axis_lengths[1] || size(trcs,2) != io.axis_lengths[2]
-            readframetrcs!(io, frmtrcs, frm, vol, hyp)
-        end
-        for (itrc,trc) in enumerate(frm_trcrng), (ismp,smp) in enumerate(frm_smprng)
-            frmtrcs[smp,trc] = trcs[ismp,itrc,ifrm,ivol,ihyp]
-        end
-        writeframe(io, frmtrcs, frm, vol, hyp)
     end
 end
 
@@ -2227,7 +2001,7 @@ function sub2ind(io::JSeis, idx::NTuple)
     end
     return idx_lin
 end
-function sub2ind(io::JSeis, hdrs::Array{UInt8,2})
+function sub2ind(io::JSeis, hdrs::AbstractArray{UInt8,2})
     ptrctype = prop(io, stockprop[:TRC_TYPE])
     for itrc = 1:size(hdrs,2)
         if get(ptrctype, hdrs, itrc) == tracetype[:live]
@@ -2237,6 +2011,7 @@ function sub2ind(io::JSeis, hdrs::Array{UInt8,2})
     end
     error("attempting to determine frame index in frame with no live traces.")
 end
+sub2ind(io::JSeis, idx::CartesianIndex) = sub2ind(io, idx.I)
 
 """
     ind2sub(io, i)

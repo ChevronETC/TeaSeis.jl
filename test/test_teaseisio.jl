@@ -65,7 +65,7 @@ mkdir(rundir)
     end
     close(io)
     io = jsopen(joinpath(rundir, "data.js"))
-    hdrs = view(readhdrs(io, :, 511), :, :, 1)
+    hdrs = view(readhdrs(io, :, :, 511), :, :, 1)
     for j = 1:6
         @test get(prop(io, stockprop[:TRACE]), hdrs, j) == 999+j
     end
