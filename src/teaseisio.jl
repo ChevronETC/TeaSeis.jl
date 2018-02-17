@@ -1896,7 +1896,7 @@ function write_trcshdrs_helper{N}(io::JSeis, trcs, hdrs, smprng, nrest::NTuple{N
     frm_smprng = collect(io, _smprng, 1)
 
     for idx in CartesianRange(nrest)
-        if length(smprng) != io.axis_lengths[1] || size(trcs,2) != io.axis_lengths[2]
+        if length(_smprng) != io.axis_lengths[1] || size(trcs,2) != io.axis_lengths[2]
             readframe_impl!(io, frmtrcs, frmhdrs, sub2ind(io, @view(hdrs[:,:,idx.I...])))
             regularize!(io, frmtrcs, frmhdrs)
         end
