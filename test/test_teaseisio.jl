@@ -146,6 +146,23 @@ mkdir(rundir)
     @test fold(io, 3) == 0
     rm(jsopen(joinpath(rundir,"data.js")))
 
+    # don't fail on a corrupt status file
+    io = jsopen(joinpath(rundir, "data.js"), "w", axis_lengths=[10,11,12])
+    io = open(joinpath(rundir, "data.js", "Status.properties"))
+    lines = readlines(io)
+    close(io)
+    io = open(joinpath(rundir,"data.js", "Status.properties"),"w")
+    for line in lines
+        if !startswith(line,"#")
+            write(io,split(line,'=')[1]*"\n")
+        else
+            write(io,line*"\n")
+        end
+    end
+    close(io)
+    @test_warn "Corrupt" jsopen(joinpath(rundir, "data.js"))
+    rm(jsopen(joinpath(rundir,"data.js")))
+
     @testset "lstrt=$(lstrt),lincrs=$(lincrs),sz=$(sz),second=$(second),T=$(T)" for lstrt in ([1,1,1,1,1], [10,20,30,40,50]), lincrs in ([1,1,1,1,1],[1,2,3,4,5]), sz in ([5,6,7], [5,6,7,8], [5,6,7,8,9]), second in (["."],["$(rundir)/second"]), T in (Float32, Int16)
         write(STDOUT, "lstrt=$(lstrt),lincrs=$(lincrs),sz=$(sz),second=$(second),T=$(T)\n")
         labls = ["SAMPLE", "TRACE", "FRAME", "VOLUME", "HYPRCUBE"]
