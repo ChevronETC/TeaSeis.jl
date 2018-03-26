@@ -1,5 +1,14 @@
 using TeaSeis, Base.Test
 
+# macro for compatability with julia 0.5
+macro mytest_warn(msg, expr)
+    if VERSION >= v"0.6.0"
+        return :(@test_warn $msg $expr)
+    else
+        return :(nothing)
+    end
+end
+
 ENV["JAVASEIS_DATA_HOME"] = ""
 ENV["PROMAX_DATA_HOME"] = ""
 
@@ -160,11 +169,7 @@ mkdir(rundir)
         end
     end
     close(io)
-    if VERSION >= v"0.6.0"
-        @test_warn "Corrupt" jsopen(joinpath(rundir, "data.js"))
-    else
-        jsopen(joinpath(rundir, "data.js"))
-    end
+    @mytest_warn "Corrupt" jsopen(joinpath(rundir,"data.js")) # see top of file for @mytest_warn macro (for compatability with julia 0.5)
     rm(jsopen(joinpath(rundir,"data.js")))
 
     @testset "lstrt=$(lstrt),lincrs=$(lincrs),sz=$(sz),second=$(second),T=$(T)" for lstrt in ([1,1,1,1,1], [10,20,30,40,50]), lincrs in ([1,1,1,1,1],[1,2,3,4,5]), sz in ([5,6,7], [5,6,7,8], [5,6,7,8,9]), second in (["."],["$(rundir)/second"]), T in (Float32, Int16)
