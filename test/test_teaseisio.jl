@@ -160,7 +160,11 @@ mkdir(rundir)
         end
     end
     close(io)
-    @test_warn "Corrupt" jsopen(joinpath(rundir, "data.js"))
+    if VERSION >= v"0.6.0"
+        @test_warn "Corrupt" jsopen(joinpath(rundir, "data.js"))
+    else
+        jsopen(joinpath(rundir, "data.js"))
+    end
     rm(jsopen(joinpath(rundir,"data.js")))
 
     @testset "lstrt=$(lstrt),lincrs=$(lincrs),sz=$(sz),second=$(second),T=$(T)" for lstrt in ([1,1,1,1,1], [10,20,30,40,50]), lincrs in ([1,1,1,1,1],[1,2,3,4,5]), sz in ([5,6,7], [5,6,7,8], [5,6,7,8,9]), second in (["."],["$(rundir)/second"]), T in (Float32, Int16)
