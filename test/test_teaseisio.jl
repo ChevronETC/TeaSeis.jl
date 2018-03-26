@@ -1,5 +1,14 @@
 using TeaSeis, Base.Test
 
+# macro for compatability with julia 0.5
+macro mytest_warn(msg, expr)
+    if VERSION >= v"0.6.0"
+        return :(@test_warn $msg $expr)
+    else
+        return :(nothing)
+    end
+end
+
 ENV["JAVASEIS_DATA_HOME"] = ""
 ENV["PROMAX_DATA_HOME"] = ""
 
@@ -144,6 +153,23 @@ mkdir(rundir)
     readframe!(io, trcs, hdrs, 3)
     @test fold(io, hdrs) == 0
     @test fold(io, 3) == 0
+    rm(jsopen(joinpath(rundir,"data.js")))
+
+    # don't fail on a corrupt status file
+    io = jsopen(joinpath(rundir, "data.js"), "w", axis_lengths=[10,11,12])
+    io = open(joinpath(rundir, "data.js", "Status.properties"))
+    lines = readlines(io)
+    close(io)
+    io = open(joinpath(rundir,"data.js", "Status.properties"),"w")
+    for line in lines
+        if !startswith(line,"#")
+            write(io,split(line,'=')[1]*"\n")
+        else
+            write(io,line*"\n")
+        end
+    end
+    close(io)
+    @mytest_warn "Corrupt" jsopen(joinpath(rundir,"data.js")) # see top of file for @mytest_warn macro (for compatability with julia 0.5)
     rm(jsopen(joinpath(rundir,"data.js")))
 
     @testset "lstrt=$(lstrt),lincrs=$(lincrs),sz=$(sz),second=$(second),T=$(T)" for lstrt in ([1,1,1,1,1], [10,20,30,40,50]), lincrs in ([1,1,1,1,1],[1,2,3,4,5]), sz in ([5,6,7], [5,6,7,8], [5,6,7,8,9]), second in (["."],["$(rundir)/second"]), T in (Float32, Int16)

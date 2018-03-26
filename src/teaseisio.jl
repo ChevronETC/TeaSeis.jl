@@ -608,6 +608,10 @@ function get_status(io::IOStream)
     for ln in eachline(io)
         if ln[1] != '#'
             x = split(ln, '=')
+            if length(x) < 2
+                warn("Corrupt status information. Status information, i.e. \"has traces\", may be incorrect.")
+                return false
+            end
             if chomp(x[2]) == "true"
                 return true
             end
