@@ -1,10 +1,10 @@
-immutable DataProperty
+struct DataProperty
     label::String
     format::Type
     value::Any
 end
 
-function DataProperty{T<:Real}(label::String, formatstring::String, value::T)
+function DataProperty(label::String, formatstring::String, value::T) where T<:Real
     format = Int32
     if formatstring == "int"
         format = Int32

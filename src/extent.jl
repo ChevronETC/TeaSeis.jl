@@ -1,4 +1,4 @@
-type Extent
+mutable struct Extent
     name::String
     path::String
     index::Int32

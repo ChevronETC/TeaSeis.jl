@@ -1,4 +1,4 @@
-type TraceCompressor{T}
+mutable struct TraceCompressor{T}
     nsamples::Int
     nwindows::Int
     windowln::Int

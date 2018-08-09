@@ -32,7 +32,7 @@ trcs, hdrs = allocframe(io)
 for ifrm = 1:size(io,3)
     readframe!(io, trcs, hdrs, ifrm)
     data_read[:,:,ifrm] = trcs
-    write(STDOUT, "read frame, trcs and hdrs API $(get(prop(io,stockprop[:FRAME]),hdrs[:,1]))\n")
+    write(stdout, "read frame, trcs and hdrs API $(get(prop(io,stockprop[:FRAME]),hdrs[:,1]))\n")
 end
 
 # demonstrate that the extrema of the written and read data agree with each other:

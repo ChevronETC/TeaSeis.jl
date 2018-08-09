@@ -1,4 +1,4 @@
-using TeaSeis, Base.Test
+using TeaSeis, Test
 
 @testset "Geometry" begin
     g = Geometry(

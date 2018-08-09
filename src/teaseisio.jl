@@ -1,4 +1,4 @@
-type JSeis
+mutable struct JSeis
     filename::String
     mode::String
     description::String
@@ -66,29 +66,29 @@ named function parameters are available:
 """
 function jsopen(
         filename::String, mode::String;
-        description        = "",                         # JavaSeis file description
-        mapped             = nothing,                    # ismapped, must be true for irregular (sparse) data
-        datatype           = nothing,                    # datatype, stockdatatype[:CUSTOM], stockdatatype[:SOURCE], etc.
-        dataformat         = nothing,                    # format stored on disk, Float32 or Float16
-        dataorder          = "",                         # big ("BIG_ENDIAN") or little ("LITTLE_ENDIAN") endian stored on disk
-        axis_lengths       = Array{Int}(0),              # length (number of bins) along each axis
-        axis_propdefs      = Array{TracePropertyDef}(0), # axis properties (use for bin header word along each dimension)
-        axis_units         = Array{String}(0),           # axis units (stockunit[:SECONDS], stockunit[:METERS], stockunit[:UNKNOWN] etc.)
-        axis_domains       = Array{String}(0),           # axis domains (stockdomain[:SPACE], stockdomain[:TIME], stockdomain[:UNKNOWN], etc.)
-        axis_lstarts       = Array{Int}(0),              # logical start index for each axis
-        axis_lincs         = Array{Int}(0),              # logical increment between bins for each axis
-        axis_pstarts       = Array{Float64}(0),          # physical start for each axis
-        axis_pincs         = Array{Float64}(0),          # physical increment between bins for each axis
-        dataproperties     = Array{DataProperty}(0),     # add global data properties
-        properties         = Array{TracePropertyDef}(0), # add headers to the standard set
-        geometry           = nothing,                    # 3 point geometry
-        secondaries        = nothing,                    # secondary file-system locations for storing trace and header data, defaults to primary storage "."
-        nextents           = 0,                          # number of file extents
-        similarto          = "",                         # create a JavaSeis file similar to this one
-        properties_add     = Array{TracePropertyDef}(0), # only used in conjunction with similarto, dis-allowed if properties is set
-        properties_rm      = Array{TracePropertyDef}(0), # only used in conjunction with similarto, dis-allowed if properties is set
-        dataproperties_add = Array{DataProperty}(0),     # only used in conjunction with similarto, dis-allowed if dataproperties is set
-        dataproperties_rm  = Array{DataProperty}(0))     # only used in conjunction with similarto, dis-allowed if dataproperties is set
+        description        = "",                                # JavaSeis file description
+        mapped             = nothing,                           # ismapped, must be true for irregular (sparse) data
+        datatype           = nothing,                           # datatype, stockdatatype[:CUSTOM], stockdatatype[:SOURCE], etc.
+        dataformat         = nothing,                           # format stored on disk, Float32 or Float16
+        dataorder          = "",                                # big ("BIG_ENDIAN") or little ("LITTLE_ENDIAN") endian stored on disk
+        axis_lengths       = Array{Int}(undef, 0),              # length (number of bins) along each axis
+        axis_propdefs      = Array{TracePropertyDef}(undef, 0), # axis properties (use for bin header word along each dimension)
+        axis_units         = Array{String}(undef, 0),           # axis units (stockunit[:SECONDS], stockunit[:METERS], stockunit[:UNKNOWN] etc.)
+        axis_domains       = Array{String}(undef, 0),           # axis domains (stockdomain[:SPACE], stockdomain[:TIME], stockdomain[:UNKNOWN], etc.)
+        axis_lstarts       = Array{Int}(undef, 0),              # logical start index for each axis
+        axis_lincs         = Array{Int}(undef, 0),              # logical increment between bins for each axis
+        axis_pstarts       = Array{Float64}(undef, 0),          # physical start for each axis
+        axis_pincs         = Array{Float64}(undef, 0),          # physical increment between bins for each axis
+        dataproperties     = Array{DataProperty}(undef, 0),     # add global data properties
+        properties         = Array{TracePropertyDef}(undef, 0), # add headers to the standard set
+        geometry           = nothing,                           # 3 point geometry
+        secondaries        = nothing,                           # secondary file-system locations for storing trace and header data, defaults to primary storage "."
+        nextents           = 0,                                 # number of file extents
+        similarto          = "",                                # create a JavaSeis file similar to this one
+        properties_add     = Array{TracePropertyDef}(undef, 0), # only used in conjunction with similarto, dis-allowed if properties is set
+        properties_rm      = Array{TracePropertyDef}(undef, 0), # only used in conjunction with similarto, dis-allowed if properties is set
+        dataproperties_add = Array{DataProperty}(undef, 0),     # only used in conjunction with similarto, dis-allowed if dataproperties is set
+        dataproperties_rm  = Array{DataProperty}(undef, 0))     # only used in conjunction with similarto, dis-allowed if dataproperties is set
     io = JSeis()
     io.filename = filename
     io.mode = mode
@@ -285,7 +285,7 @@ function jsopen_write(io::JSeis, nextents::Int, ndim::Int, description::String, 
     end
 
     # initialize trace properties to an empty array
-    io.properties = Array{TraceProperty}(0)
+    io.properties = Array{TraceProperty}(undef, 0)
 
     # trace properties, minimal set (as defined by SeisSpace / ProMAX)
     byteoffset = issimilar == false ? sspropset!(io.properties, 0) : 0
@@ -475,7 +475,7 @@ get_dataorder(xml::XMLDocument)    = strip(content(get_file_property_element(xml
 
 function get_axis_propdefs(properties::Array{TraceProperty, 1}, xml::XMLDocument)
     labels = split(content(get_file_property_element(xml, "AxisLabels")))
-    propdefs = Array{TracePropertyDef}(0)
+    propdefs = Array{TracePropertyDef}(undef, 0)
     for (i,label) in enumerate(labels)
         push!(propdefs, get_axis_propdef(properties, label, i))
     end
@@ -516,7 +516,7 @@ function get_dataformat(xml::XMLDocument)
 end
 
 function get_trace_properties(xml::XMLDocument)
-    props = Array{TraceProperty}(0)
+    props = Array{TraceProperty}(undef, 0)
     for parset in child_elements(root(xml))
         if attribute(parset, "name") == "TraceProperties"
             for parset2 in child_elements(parset)
@@ -543,7 +543,7 @@ function get_trace_properties(xml::XMLDocument)
 end
 
 function get_dataproperties(xml::XMLDocument)
-    dataprops = Array{DataProperty}(0)
+    dataprops = Array{DataProperty}(undef, 0)
     for parset in child_elements(root(xml))
         if attribute(parset, "name") == "CustomProperties"
             for par in child_elements(parset)
@@ -582,7 +582,7 @@ function get_geom(xml::XMLDocument)
                             g["vx"],g["vy"],g["vz"],
                             g["wx"],g["wy"],g["wz"])
                     catch
-                        warn("Corrupt geometry information")
+                        @warn "Corrupt geometry information"
                         return nothing
                     end
                 end
@@ -609,7 +609,7 @@ function get_status(io::IOStream)
         if ln[1] != '#'
             x = split(ln, '=')
             if length(x) < 2
-                warn("Corrupt status information. Status information, i.e. \"has traces\", may be incorrect.")
+                @warn "Corrupt status information. Status information, i.e. \"has traces\", may be incorrect."
                 return false
             end
             if chomp(x[2]) == "true"
@@ -692,7 +692,7 @@ end
 
 function delete_first_line(filename::AbstractString)
     io = open(filename)
-    lines = VERSION < v"0.6.0" ? readlines(io) : readlines(io,chomp=false)
+    lines = readlines(io,chomp=false)
     close(io)
     io = open(filename, "w")
     for i = 2:length(lines)
@@ -974,7 +974,7 @@ function extentdir(secondary::String, filename::String)
     elseif datahome != ""
         filename = abspath(filename)
         if contains(filename, datahome) == true
-            return normpath(replace(filename, datahome, is_windows() ? "$(secondary)//" : "$(secondary)/"))
+            return normpath(replace(filename, datahome, Sys.iswindows() ? "$(secondary)//" : "$(secondary)/"))
         end
         if isrelative == true && startswith(pwd(),datahome) == false
             error("JAVASEIS_DATA_HOME or PROMAX_DATA_HOME is set, and JavaSeis filename is relative,
@@ -985,7 +985,7 @@ Either unset JAVASEIS_DATA_HOME and PROMAX_DATA_HOME, make your working director
     elseif isrelative == true
         return joinpath(secondary, filename)
     else
-        return joinpath(secondary, is_windows() ? filename[5:end] : filename[2:end])
+        return joinpath(secondary, Sys.iswindows() ? filename[5:end] : filename[2:end])
     end
 end
 
@@ -1061,12 +1061,12 @@ headerlength(io::JSeis) = headerlength(io.properties)
 Get the value of the trace property `prop::TraceProperty` stored in the header `hdr::Array{UInt8,1}`.  For example,
 `io=jsopen("data.js"); get(prop(io, "REC_X"), readframehdrs(io,1)[:,1])`
 """
-function get{T<:Number}(prop::TraceProperty{T}, hdr::AbstractArray{UInt8,1})
+function get(prop::TraceProperty{T}, hdr::AbstractArray{UInt8,1}) where T<:Number
     iohdr = IOBuffer(hdr)
     seek(iohdr, prop.byteoffset)
     return read(iohdr, T)
 end
-function get{T<:Union{Int32,Int64,AbstractFloat}}(prop::TraceProperty{Array{T,1}}, hdr::AbstractArray{UInt8,1})
+function get(prop::TraceProperty{Array{T,1}}, hdr::AbstractArray{UInt8,1}) where T<:Union{Int32,Int64,AbstractFloat}
     iohdr = IOBuffer(hdr)
     seek(iohdr, prop.byteoffset)
     return read(iohdr, T, prop.def.elementcount)
@@ -1091,13 +1091,13 @@ Set the value of the trace property `prop::TraceProperty` stored in the header o
 `hdrs::Array{UInt8,2}` to `value::T`.  For example,
 `io=jsopen("test.js"); hdrs=readframehdrs(io,1); set!(prop(io,"REC_X"), 1, 10.0)`.
 """
-function set!{T<:Number}(prop::TraceProperty, hdrs::AbstractArray{UInt8,2}, i::Int64, value::T)
+function set!(prop::TraceProperty, hdrs::AbstractArray{UInt8,2}, i::Int64, value::T) where T<:Number
     @assert prop.def.elementcount == 1
     iohdr = IOBuffer(vec(hdrs), false, true)
     seek(iohdr, (i-1)*size(hdrs,1) + prop.byteoffset)
     write(iohdr, convert(prop.def.format, value))
 end
-function set!{T<:Number}(prop::TraceProperty, hdrs::AbstractArray{UInt8,2}, i::Int64, value::Array{T})
+function set!(prop::TraceProperty, hdrs::AbstractArray{UInt8,2}, i::Int64, value::Array{T}) where T<:Number
     @assert length(value) == prop.def.elementcount
     iohdr = IOBuffer(vec(hdrs), false, true)
     seek(iohdr, (i-1)*size(hdrs,1) + prop.byteoffset)
@@ -1503,7 +1503,7 @@ hdrs = readframehdrs(jsopen("data_5D.js"), frm_idx, vol_idx, hyp_idx)
 """
 readframehdrs(io::JSeis, idx::Int...) = readframehdrs_impl(io, sub2ind(io, idx))
 
-function parserngs{N}(io::JSeis, smprng::Union{Int,Range{Int},Colon}, trcrng::Union{Int,Range{Int},Colon}, rng::Vararg{Union{Int,Range{Int},Colon},N})
+function parserngs(io::JSeis, smprng::Union{Int,AbstractRange{Int},Colon}, trcrng::Union{Int,AbstractRange{Int},Colon}, rng::Vararg{Union{Int,AbstractRange{Int},Colon},N}) where N
     smprng = parserng(io, smprng, 1)
     trcrng = parserng(io, trcrng, 2)
     rng = ntuple(i->parserng(io, rng[i], 2+i), N)
@@ -1511,27 +1511,27 @@ function parserngs{N}(io::JSeis, smprng::Union{Int,Range{Int},Colon}, trcrng::Un
     smprng::StepRange{Int,Int}, trcrng::StepRange{Int,Int}, rng::NTuple{N,StepRange{Int,Int}}, nrng::NTuple{N,Int}
 end
 parserng(io::JSeis,rng::Int,i) = StepRange(rng:1:rng)
-parserng(io::JSeis,rng::Range{Int},i) = StepRange(rng)
+parserng(io::JSeis,rng::AbstractRange{Int},i) = StepRange(rng)
 parserng(io::JSeis,rng::Colon,i) = lrange(io,i)::StepRange{Int,Int}
 
-parseindex(rng::Tuple{Range}, idx_n::CartesianIndex{1}) = CartesianIndex(rng[1][idx_n[1]])
-parseindex(rng::Tuple{Range,Range}, idx_n::CartesianIndex{2}) = CartesianIndex(rng[1][idx_n[1]],rng[2][idx_n[2]])
-parseindex(rng::Tuple{Range,Range,Range}, idx_n::CartesianIndex{3}) = CartesianIndex(rng[1][idx_n[1]],rng[2][idx_n[2]],rng[3][idx_n[3]])
-parseindex{N}(rng::NTuple{N,Range}, idx_n::CartesianIndex) = CartesianIndex(ntuple(i->rng[i][idx_n[i]], length(rng)))
+parseindex(rng::Tuple{AbstractRange}, idx_n::CartesianIndex{1}) = CartesianIndex(rng[1][idx_n[1]])
+parseindex(rng::Tuple{AbstractRange,AbstractRange}, idx_n::CartesianIndex{2}) = CartesianIndex(rng[1][idx_n[1]],rng[2][idx_n[2]])
+parseindex(rng::Tuple{AbstractRange,AbstractRange,AbstractRange}, idx_n::CartesianIndex{3}) = CartesianIndex(rng[1][idx_n[1]],rng[2][idx_n[2]],rng[3][idx_n[3]])
+parseindex(rng::NTuple{N,AbstractRange}, idx_n::CartesianIndex) where {N} = CartesianIndex(ntuple(i->rng[i][idx_n[i]], length(rng)))
 
-function collect(io::JSeis, rng::Range{Int}, dim::Int)
+function collect(io::JSeis, rng::AbstractRange{Int}, dim::Int)
     collect(div(rng[1]    - io.axis_lstarts[dim],io.axis_lincs[dim])+1:
             div(step(rng)                       ,io.axis_lincs[dim])  :
             div(rng[end]  - io.axis_lstarts[dim],io.axis_lincs[dim])+1)
 end
 
-function readtrcs_impl!{N}(io::JSeis, trcs::AbstractArray{Float32}, smprng::Range{Int}, trcrng::Range{Int}, rng::Vararg{Union{Colon,Int,Range{Int}},N})
+function readtrcs_impl!(io::JSeis, trcs::AbstractArray{Float32}, smprng::AbstractRange{Int}, trcrng::AbstractRange{Int}, rng::Vararg{Union{Colon,Int,AbstractRange{Int}},N}) where N
     frmtrcs, frmhdrs = allocframe(io)
     frm_smprng = collect(io, smprng, 1)
     frm_trcrng = collect(io, trcrng, 2)
 
     n = ntuple(i->length(rng[i]), N)::NTuple{N,Int}
-    for idx_n in CartesianRange(n)
+    for idx_n in CartesianIndices(n)
         idx = parseindex(rng, idx_n)
         if fold(io, idx) == size(io,2)
             readframetrcs_impl!(io, frmtrcs, sub2ind(io, idx))
@@ -1545,12 +1545,12 @@ function readtrcs_impl!{N}(io::JSeis, trcs::AbstractArray{Float32}, smprng::Rang
     end
 end
 
-function readhdrs_impl!{N}(io::JSeis, hdrs::AbstractArray{UInt8}, trcrng::Range{Int}, rng::Vararg{Union{Colon,Int,Range{Int}},N})
+function readhdrs_impl!(io::JSeis, hdrs::AbstractArray{UInt8}, trcrng::AbstractRange{Int}, rng::Vararg{Union{Colon,Int,AbstractRange{Int}},N}) where N
     frmhdrs = allocframehdrs(io)
     frm_trcrng = collect(io, trcrng, 2)
 
     n = ntuple(i->length(rng[i]), length(rng))::NTuple{N,Int}
-    for idx_n in CartesianRange(n)
+    for idx_n in CartesianIndices(n)
         idx = parseindex(rng, idx_n)
         readframehdrs_impl!(io, frmhdrs, sub2ind(io, idx))
         if fold(io, frmhdrs) < size(io, 2)
@@ -1562,12 +1562,12 @@ function readhdrs_impl!{N}(io::JSeis, hdrs::AbstractArray{UInt8}, trcrng::Range{
     end
 end
 
-function read_impl!{N}(io::JSeis, trcs::AbstractArray{Float32}, hdrs::AbstractArray{UInt8}, smprng::Range{Int}, trcrng::Range{Int}, rng::Vararg{Range{Int}, N})
+function read_impl!(io::JSeis, trcs::AbstractArray{Float32}, hdrs::AbstractArray{UInt8}, smprng::AbstractRange{Int}, trcrng::AbstractRange{Int}, rng::Vararg{AbstractRange{Int}, N}) where N
     frmtrcs, frmhdrs = allocframe(io)
     frm_smprng = collect(io, smprng, 1)
     frm_trcrng = collect(io, trcrng, 2)
     n = ntuple(i->length(rng[i]), N)::NTuple{N,Int}
-    for idx_n in CartesianRange(n)
+    for idx_n in CartesianIndices(n)
         idx = parseindex(rng, idx_n)
         readframe_impl!(io, frmtrcs, frmhdrs, sub2ind(io, idx))
         if fold(io, idx) < size(io, 2)
@@ -1611,7 +1611,7 @@ readtrcs!(jsopen("data_5D.js"), trcs, :, :, :, :, :)
 readtrcs!(jsopen("data_5D.js"), trcs, :, :, 2, 2:2:10, 1:10)
 ```
 """
-function readtrcs!{N}(io::JSeis, trcs::AbstractArray{Float32}, rng::Vararg{Union{Int,Range{Int},Colon},N})
+function readtrcs!(io::JSeis, trcs::AbstractArray{Float32}, rng::Vararg{Union{Int,AbstractRange{Int},Colon},N}) where N
     smprng, trcrng, _rng, nrng = parserngs(io, rng...)
     @assert size(trcs)[1:2] == (length(smprng), length(trcrng)) && size(trcs)[3:end] == nrng
     readtrcs_impl!(io, trcs, smprng, trcrng, _rng...)
@@ -1644,7 +1644,7 @@ trcs = readtrcs(jsopen("data_5D.js"), :, :, :, :, :)
 trcs = readtrcs(jsopen("data_5D.js"), :, :, 2, 2:2:10, 1:10)
 ```
 """
-function readtrcs{N}(io::JSeis, rng::Vararg{Union{Int,Range{Int},Colon},N})
+function readtrcs(io::JSeis, rng::Vararg{Union{Int,AbstractRange{Int},Colon},N}) where N
     smprng, trcrng, _rng, nrng = parserngs(io, rng...)
     trcs = Array{Float32}(length(smprng), length(trcrng), nrng...)
     readtrcs_impl!(io, trcs, smprng, trcrng, _rng...)
@@ -1678,7 +1678,7 @@ readhdrs!(jsopen("data_5D.js"), hdrs, :, :, :, :, :)
 readhdrs!(jsopen("data_5D.js"), hdrs, :, :, 2, 2:2:10, 1:10)
 ```
 """
-function readhdrs!{N}(io::JSeis, hdrs::AbstractArray{UInt8}, rng::Vararg{Union{Int,Range{Int},Colon},N})
+function readhdrs!(io::JSeis, hdrs::AbstractArray{UInt8}, rng::Vararg{Union{Int,AbstractRange{Int},Colon},N}) where N
     @assert rng[1] == Colon()
     smprng, trcrng, _rng, nrng = parserngs(io, rng...)
     @assert size(hdrs,1) == headerlength(io) && size(hdrs,2) == length(trcrng) && size(hdrs)[3:end] == nrng
@@ -1711,7 +1711,7 @@ hdrs = readhdrs(jsopen("data_5D.js"), :, :, :, :, :)
 hdrs = readhdrs(jsopen("data_5D.js"), :, :, 2, 2:2:10, 1:10)
 ```
 """
-function readhdrs{N}(io::JSeis, rng::Vararg{Union{Int,Range{Int},Colon},N})
+function readhdrs(io::JSeis, rng::Vararg{Union{Int,AbstractRange{Int},Colon},N}) where N
     @assert rng[1] == Colon()
     smprng, trcrng, _rng, nrng = parserngs(io, rng...)
     hdrs = Array{UInt8,N}(headerlength(io), length(trcrng), nrng...)
@@ -1745,7 +1745,7 @@ read!(jsopen("data_5D.js"), trcs, hdrs, :, :, :, :, :)
 read!(jsopen("data_5D.js"), trcs, hdrs, :, :, 2, 2:2:10, 1:10)
 ```
 """
-function read!{N}(io::JSeis, trcs::AbstractArray{Float32}, hdrs::AbstractArray{UInt8}, rng::Vararg{Union{Int,Range{Int},Colon}, N})
+function read!(io::JSeis, trcs::AbstractArray{Float32}, hdrs::AbstractArray{UInt8}, rng::Vararg{Union{Int,AbstractRange{Int},Colon}, N}) where N
     smprng, trcrng, _rng, nrng = parserngs(io, rng...)
     @assert size(trcs)[1:2] == (length(smprng), length(trcrng)) && size(trcs)[3:end] == nrng
     @assert size(hdrs,1) == headerlength(io) && size(hdrs,2) == length(trcrng) && size(hdrs)[3:end] == nrng
@@ -1778,7 +1778,7 @@ trcs, hdrs = read(jsopen("data_5D.js"), :, :, :, :, :)
 trcs, hdrs = read(jsopen("data_5D.js"), :, :, 2, 2:2:10, 1:10)
 ```
 """
-function read{N}(io::JSeis, rng::Vararg{Union{Int,Range{Int},Colon},N})
+function read(io::JSeis, rng::Vararg{Union{Int,AbstractRange{Int},Colon},N}) where N
     smprng, trcrng, _rng, nrng = parserngs(io, rng...)
     trcs = Array{Float32}(length(smprng), length(trcrng), nrng...)::Array{Float32,N}
     hdrs = Array{UInt8}(headerlength(io), length(trcrng), nrng...)::Array{UInt8,N}
@@ -1887,10 +1887,10 @@ Write `trcs` and `hdrs` to the file corresponding to `io::JSeis`.  Optionally, y
 The locations that are written to are determined by the values corresponding to the framework headers `hdrs`.  Note that
 the dimension of the arrays `trcs` and `hdrs` must match the number of dimensions in the framework.
 """
-write(io::JSeis, trcs::AbstractArray{Float32}, hdrs::AbstractArray{UInt8}, smprng::Union{Colon,Int,Range{Int}}=:) = write_trcshdrs_helper(io, trcs, hdrs, smprng, ntuple(i->size(trcs,2+i), ndims(trcs)-2))
-write(io::JSeis, trcs::AbstractArray{Float64}, hdrs::AbstractArray{UInt8}, smprng::Union{Colon,Int,Range{Int}}=:) = write(io, convert(Array{Float32}, trcs), hdrs, smprng)
+write(io::JSeis, trcs::AbstractArray{Float32}, hdrs::AbstractArray{UInt8}, smprng::Union{Colon,Int,AbstractRange{Int}}=:) = write_trcshdrs_helper(io, trcs, hdrs, smprng, ntuple(i->size(trcs,2+i), ndims(trcs)-2))
+write(io::JSeis, trcs::AbstractArray{Float64}, hdrs::AbstractArray{UInt8}, smprng::Union{Colon,Int,AbstractRange{Int}}=:) = write(io, convert(Array{Float32}, trcs), hdrs, smprng)
 
-function write_trcshdrs_helper{N}(io::JSeis, trcs, hdrs, smprng, nrest::NTuple{N,Int})
+function write_trcshdrs_helper(io::JSeis, trcs, hdrs, smprng, nrest::NTuple{N,Int}) where N
     ntrcs = size(trcs,2)
     hdrlen = headerlength(io)
     _smprng = parserng(io, smprng, 1)
@@ -1899,7 +1899,7 @@ function write_trcshdrs_helper{N}(io::JSeis, trcs, hdrs, smprng, nrest::NTuple{N
     trcprop = props(io, 2)
     frm_smprng = collect(io, _smprng, 1)
 
-    for idx in CartesianRange(nrest)
+    for idx in CartesianIndices(nrest)
         if length(_smprng) != io.axis_lengths[1] || size(trcs,2) != io.axis_lengths[2]
             readframe_impl!(io, frmtrcs, frmhdrs, sub2ind(io, @view(hdrs[:,:,idx.I...])))
             regularize!(io, frmtrcs, frmhdrs)
@@ -1942,7 +1942,7 @@ write(io, trcs, :, :, :, :)
 write(io, trcs, :, :, :, :, :)
 ```
 """
-function write{N}(io::JSeis, trcs::AbstractArray{Float32}, rng::Vararg{Union{Colon,Int,Range{Int}},N})
+function write(io::JSeis, trcs::AbstractArray{Float32}, rng::Vararg{Union{Colon,Int,AbstractRange{Int}},N}) where N
     @assert ndims(trcs) == length(rng)
 
     smprng, trcrng, _rng, nrng = parserngs(io, rng...)
@@ -1958,16 +1958,16 @@ function write{N}(io::JSeis, trcs::AbstractArray{Float32}, rng::Vararg{Union{Col
 
     write_helper(io, trcs, frmtrcs, frm_smprng, frm_trcrng, smprng, nrng, _rng) # split-out to help type inference
 end
-write(io::JSeis, trcs::AbstractArray{Float64}, smprng::Union{Colon,Int,Range{Int}}, trcrng::Union{Colon,Int,Range{Int}}, rng::Union{Colon,Int,Range{Int}}...) = write(io, convert(Array{Float32}, trcs), smprng, trcrng, rng...)
+write(io::JSeis, trcs::AbstractArray{Float64}, smprng::Union{Colon,Int,AbstractRange{Int}}, trcrng::Union{Colon,Int,AbstractRange{Int}}, rng::Union{Colon,Int,AbstractRange{Int}}...) = write(io, convert(Array{Float32}, trcs), smprng, trcrng, rng...)
 
-function write_helper{N}(io::JSeis, trcs, frmtrcs, frm_smprng, frm_trcrng, smprng, nrng, _rng::NTuple{N,StepRange{Int,Int}})
+function write_helper(io::JSeis, trcs, frmtrcs, frm_smprng, frm_trcrng, smprng, nrng, _rng::NTuple{N,StepRange{Int,Int}}) where N
     n = ntuple(i->length(_rng[i]), N)::NTuple{N,Int}
 
     frmhdrs = allocframehdrs(io)
     prop_trctype = prop(io, stockprop[:TRC_TYPE])
     map(itrace->set!(prop_trctype, frmhdrs, itrace, tracetype[:live]), 1:size(io,2))
 
-    for idx_n in CartesianRange(n)
+    for idx_n in CartesianIndices(n)
         idx = parseindex(_rng, idx_n)
         if length(smprng) != io.axis_lengths[1] || size(trcs,2) != io.axis_lengths[2]
             readframetrcs_impl!(io, frmtrcs, sub2ind(io,idx))

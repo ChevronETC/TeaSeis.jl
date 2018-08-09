@@ -1,4 +1,4 @@
-immutable Geometry
+struct Geometry
     u1::Int
     un::Int
     v1::Int

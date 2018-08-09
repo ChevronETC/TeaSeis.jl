@@ -1,12 +1,8 @@
-using TeaSeis, Base.Test
+using TeaSeis, Test
 
 # macro for compatability with julia 0.5
 macro mytest_warn(msg, expr)
-    if VERSION >= v"0.6.0"
-        return :(@test_warn $msg $expr)
-    else
-        return :(nothing)
-    end
+    return :(@test_warn $msg $expr)
 end
 
 ENV["JAVASEIS_DATA_HOME"] = ""
@@ -173,7 +169,7 @@ mkdir(rundir)
     rm(jsopen(joinpath(rundir,"data.js")))
 
     @testset "lstrt=$(lstrt),lincrs=$(lincrs),sz=$(sz),second=$(second),T=$(T)" for lstrt in ([1,1,1,1,1], [10,20,30,40,50]), lincrs in ([1,1,1,1,1],[1,2,3,4,5]), sz in ([5,6,7], [5,6,7,8], [5,6,7,8,9]), second in (["."],["$(rundir)/second"]), T in (Float32, Int16)
-        write(STDOUT, "lstrt=$(lstrt),lincrs=$(lincrs),sz=$(sz),second=$(second),T=$(T)\n")
+        write(stdout, "lstrt=$(lstrt),lincrs=$(lincrs),sz=$(sz),second=$(second),T=$(T)\n")
         labls = ["SAMPLE", "TRACE", "FRAME", "VOLUME", "HYPRCUBE"]
         pdefs = [stockprop[:SAMPLE], stockprop[:TRACE], stockprop[:FRAME], stockprop[:VOLUME], stockprop[:HYPRCUBE]]
         unts  = [stockunit[:UNKNOWN], "unknown", "unknown", "unknown", "unknown"]
@@ -553,7 +549,7 @@ mkdir(rundir)
         sz_sparse[1] = sz[1]
 
         frmtrcs, hdrs = allocframe(io)
-        for idx in CartesianRange(ntuple(i->sz_sparse[2+i],n-2))
+        for idx in CartesianIndices(ntuple(i->sz_sparse[2+i],n-2))
             jtrc = 1
             for itrc = 1:sz[2]
                 if jtrc <= sz_sparse[2] && itrc == indexes[1][jtrc]
@@ -584,7 +580,7 @@ mkdir(rundir)
         # read test, explicit fold and headers, multiple extents
         #
         io = jsopen(filename1)
-        for idx in CartesianRange(ntuple(i->sz_sparse[2+i], n-2))
+        for idx in CartesianIndices(ntuple(i->sz_sparse[2+i], n-2))
             fld = readframe!(io, frmtrcs, hdrs, idx.I...)
             @test fld == sz_sparse[2]
             for jtrc = 1:sz_sparse[2]

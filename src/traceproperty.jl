@@ -1,10 +1,10 @@
-immutable TracePropertyDef{T}
+struct TracePropertyDef{T}
     label::String
     description::String
     format::Type{T}
     elementcount::Int32
 end
-function TracePropertyDef{T<:Number}(label::String, description::String, format::Type{T}, elementcount::Int)
+function TracePropertyDef(label::String, description::String, format::Type{T}, elementcount::Int) where T<:Number
     _format = format
     if format == UInt8
         _format = Array{UInt8,1}
@@ -21,16 +21,16 @@ function TracePropertyDef(label::AbstractString)
     end
     return TracePropertyDef(label, "", Int32, 1)
 end
-TracePropertyDef{T<:Number}(label::AbstractString, description::AbstractString, format::Type{T}, elementcount::Int) = TracePropertyDef(String(label), String(description), format, elementcount)
+TracePropertyDef(label::AbstractString, description::AbstractString, format::Type{T}, elementcount::Int) where {T<:Number} = TracePropertyDef(String(label), String(description), format, elementcount)
 
-type TraceProperty{T}
+mutable struct TraceProperty{T}
     def::TracePropertyDef{T}
     byteoffset::Int32
 end
-TraceProperty{T}(def::TracePropertyDef{T}, byteoffset::Int64) = TraceProperty(def, Int32(byteoffset))
+TraceProperty(def::TracePropertyDef{T}, byteoffset::Int64) where {T} = TraceProperty(def, Int32(byteoffset))
 
 function TraceProperty(label::String, description::String, format::String, elementcount::Int32, byteoffset::Int32)
-    _format = Void
+    _format = Nothing
     if format == "INTEGER"
         _format = elementcount == 1 ? Int32 : Array{Int32,1}
     elseif format == "LONG"
@@ -82,8 +82,8 @@ function proplabel(props::Array{TracePropertyDef,1})
     return labels
 end
 
-sizeof{T<:Number}(propdef::TracePropertyDef{T}) = sizeof(T)*propdef.elementcount
-sizeof{T<:Array}(propdef::TracePropertyDef{T}) = sizeof(eltype(T))*propdef.elementcount
+sizeof(propdef::TracePropertyDef{T}) where {T<:Number} = sizeof(T)*propdef.elementcount
+sizeof(propdef::TracePropertyDef{T}) where {T<:Array} = sizeof(eltype(T))*propdef.elementcount
 sizeof(prop::TraceProperty) = sizeof(prop.def)
 
 propdef(prop::TraceProperty) = prop.def
