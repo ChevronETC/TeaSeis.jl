@@ -1,17 +1,18 @@
-immutable TracePropertyDef{T}
+struct TracePropertyDef{T}
     label::String
     description::String
     format::Type{T}
     elementcount::Int32
-end
-function TracePropertyDef{T<:Number}(label::String, description::String, format::Type{T}, elementcount::Int)
-    _format = format
-    if format == UInt8
-        _format = Array{UInt8,1}
-    elseif elementcount > 1
-        _format = Array{format,1}
+
+    function TracePropertyDef(label::AbstractString, description::AbstractString, format::DataType, elementcount::Integer)
+        _format = format
+        if format == UInt8
+            _format = Array{UInt8,1}
+        elseif elementcount > 1
+            _format = Array{format,1}
+        end
+        new{_format}(String(label), String(description), _format, Int32(elementcount))
     end
-    TracePropertyDef(label, description, _format, Int32(elementcount))
 end
 function TracePropertyDef(label::AbstractString)
     for propdef in stockprop
@@ -21,26 +22,25 @@ function TracePropertyDef(label::AbstractString)
     end
     return TracePropertyDef(label, "", Int32, 1)
 end
-TracePropertyDef{T<:Number}(label::AbstractString, description::AbstractString, format::Type{T}, elementcount::Int) = TracePropertyDef(String(label), String(description), format, elementcount)
 
-type TraceProperty{T}
+mutable struct TraceProperty{T}
     def::TracePropertyDef{T}
     byteoffset::Int32
 end
-TraceProperty{T}(def::TracePropertyDef{T}, byteoffset::Int64) = TraceProperty(def, Int32(byteoffset))
+TraceProperty(def::TracePropertyDef{T}, byteoffset::Int64) where {T} = TraceProperty(def, Int32(byteoffset))
 
-function TraceProperty(label::String, description::String, format::String, elementcount::Int32, byteoffset::Int32)
-    _format = Void
+function TraceProperty(label::AbstractString, description::AbstractString, format::AbstractString, elementcount::Int32, byteoffset::Int32)
+    _format = Nothing
     if format == "INTEGER"
-        _format = elementcount == 1 ? Int32 : Array{Int32,1}
+        _format = Int32
     elseif format == "LONG"
-        _format = elementcount == 1 ? Int64 : Array{Int64,1}
+        _format = Int64
     elseif format == "FLOAT"
-        _format = elementcount == 1 ? Float32 : Array{Float32,1}
+        _format = Float32
     elseif format == "DOUBLE"
-        _format = elementcount == 1 ? Float64 : Array{Float64,1}
+        _format = Float64
     elseif format == "BYTESTRING"
-        _format = Array{UInt8,1}
+        _format = UInt8
     else
         error("unrecognized format: $(format)")
     end
@@ -75,15 +75,15 @@ in(item::String, col::Array{TraceProperty,1}) = in(item, propdef(col))
 
 function proplabel(props::Array{TracePropertyDef,1})
     n = length(props)
-    labels = Array{String}(n)
+    labels = Array{String}(undef, n)
     for i = 1:n
         labels[i] = props[i].label
     end
     return labels
 end
 
-sizeof{T<:Number}(propdef::TracePropertyDef{T}) = sizeof(T)*propdef.elementcount
-sizeof{T<:Array}(propdef::TracePropertyDef{T}) = sizeof(eltype(T))*propdef.elementcount
+sizeof(propdef::TracePropertyDef{T}) where {T<:Number} = sizeof(T)*propdef.elementcount
+sizeof(propdef::TracePropertyDef{T}) where {T<:Array} = sizeof(eltype(T))*propdef.elementcount
 sizeof(prop::TraceProperty) = sizeof(prop.def)
 
 propdef(prop::TraceProperty) = prop.def

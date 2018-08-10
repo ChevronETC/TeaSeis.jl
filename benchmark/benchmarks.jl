@@ -1,4 +1,4 @@
-using TeaSeis, BenchmarkTools
+using TeaSeis, BenchmarkTools, Random
 
 const fs="."
 const N1,N2,N3,N4,N5=100,11,12,2,3
@@ -62,7 +62,7 @@ function makepartialframe()
     f = makefname()
     io = jsopen(f,"w",axis_lengths=[N1,N2,1])
     d,h = allocframe(io)
-    srand(0)
+    Random.seed!(0)
     rand!(d)
     alive = fill(false, N2)
     alive[randperm(N2)[1:div(N2,2)]] .= true

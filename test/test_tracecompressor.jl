@@ -1,4 +1,4 @@
-using TeaSeis, Base.Test
+using TeaSeis, Test
 
 @testset "Compressor Tests" begin
     # packing a single trace

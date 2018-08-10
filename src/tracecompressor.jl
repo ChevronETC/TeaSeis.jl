@@ -1,4 +1,4 @@
-type TraceCompressor{T}
+mutable struct TraceCompressor{T}
     nsamples::Int
     nwindows::Int
     windowln::Int
@@ -89,8 +89,8 @@ function unpackframe!(c::TraceCompressor{Int16}, frame32::Array{Float32,2}, buff
 end
 
 function allocframebuf(c::TraceCompressor{Int16}, ntraces::Int)
-    bufarray = Array{UInt8}(ntraces * tracelength(c))
-    IOBuffer(bufarray, true, true, length(bufarray))
+    bufarray = Array{UInt8}(undef, ntraces * tracelength(c))
+    IOBuffer(bufarray, read=true, write=true, maxsize=length(bufarray))
 end
 
 tracelength(c::TraceCompressor{Int16})   = iseven(c.nsamples) == true ? 4 * c.nwindows + 2 * c.nsamples : 4 * c.nwindows + 2 * (c.nsamples + 1)

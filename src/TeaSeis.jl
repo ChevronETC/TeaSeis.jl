@@ -1,8 +1,6 @@
-__precompile__()
-
 module TeaSeis
 
-using LightXML
+using Dates, LightXML
 
 import
 Base.==,

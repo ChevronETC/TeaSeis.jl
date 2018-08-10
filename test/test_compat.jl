@@ -1,4 +1,4 @@
-using TeaSeis, LightXML, Base.Test
+using TeaSeis, LightXML, Test
 
 @testset "Compat Test" for (pmlbls, jslbls, pdefs) in (
     (("DPTH_IND", "CHAN", "XLINE_NO", "ILINE_NO", "OFB_NO"),
