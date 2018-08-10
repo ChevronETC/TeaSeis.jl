@@ -16,7 +16,7 @@ mutable struct JSeis
     axis_pstarts::Array{Float64,1}
     axis_pincs::Array{Float64,1}
     dataproperties::Array{DataProperty,1}
-    geom::Nullable{Geometry}
+    geom::Union{Geometry,Nothing}
     hastraces::Bool
     secondaries::Array{String, 1}
     trcextents::Array{Extent,1}
@@ -58,7 +58,7 @@ named function parameters are available:
 * `properties::Array{TracePropertyDef}` An array of custom data properties.  One property per data-set rather than one property per trace as in `properties` above.
 * `geometry::Geometry` An optional three point geometry can be embedded in the JavaSeis file.
 * `secondaries::Array{String}` An array of file-system locations used to store the file extents.  If not set, then *primary* storage is used.
-* `nextents::Int64` The number of file-extents used to store the data.  If not set, then a heuristic is used to choose the number of extents.  The heuristic is: min(256,10 + (FRAMEWORK_SIZE)/(2\*1024^3)).
+* `nextents::Int64` The number of file-extents used to store the data.  If not set, then a heuristic is used to choose the number of extents.  The heuristic is: min(256,10 + (FRAMEWORK_SIZE)/(2*1024^3)).
 * `properties_add::Array{TracePropertyDef}` When `similarto` is specified, use this to add trace properties to those already existing in the `similarto` file.
 * `properties_rm::Array{TracePropertyDef}` When `similarto` is specified, use this to remove trace properties to those already existing in the `similarto` file.
 * `dataproperties_add::Array{DataProperty}` When `similarto` is specfied, use this to add dataset properties to those aloready existing in the `similarto` file.
@@ -114,7 +114,7 @@ function jsopen(
         io.axis_pstarts   = get_axis_pstarts(xml)
         io.axis_pincs     = get_axis_pincs(xml)
         io.dataproperties = get_dataproperties(xml)
-        io.geom           = Nullable{Geometry}(get_geom(xml))
+        io.geom           = nothing
 
         io.hastraces = false
         if isfile(joinpath(filename, "Status.properties")) == true # Do not fail if Status.properties does not exist to maintain backwards compat
@@ -158,7 +158,7 @@ function jsopen(
         io.axis_pstarts   = axis_pstarts
         io.axis_pincs     = axis_pincs
         io.dataproperties = dataproperties
-        io.geom           = geometry == nothing ? Nullable{Geometry}() : Nullable{Geometry}(geometry)
+        io.geom           = geometry == nothing ? nothing : geometry
         io.secondaries    = secondaries == nothing ? ["."] : secondaries
     elseif mode == "w" && similarto != ""
         iosim = jsopen(similarto, "r")
@@ -223,7 +223,7 @@ function jsopen(
         io.axis_pstarts   = length(axis_pstarts) == 0 ? copy(iosim.axis_pstarts) : axis_pstarts
         io.axis_pincs     = length(axis_pincs) == 0 ? copy(iosim.axis_pincs) : axis_pincs
         io.dataproperties = dataproperties
-        io.geom           = geometry == nothing ? (isnull(iosim.geom) ? Nullable{Geometry}() : Nullable{Geometry}(get(iosim.geom))) : Nullable{Geometry}(geometry)
+        io.geom           = geometry == nothing ? iosim.geom : geometry
         io.secondaries    = secondaries == nothing ? copy(iosim.secondaries) : secondaries
         nextents          = nextents == 0 ? length(iosim.trcextents) : nextents
     end
@@ -622,7 +622,7 @@ end
 
 function get_secondaries(xml::XMLDocument)
     n = get_nsecondaries(xml)
-    secondaries = Array{String}(n)
+    secondaries = Array{String}(undef, n)
     for i=1:n
         secondaries[i] = get_secondary(xml, i)
     end
@@ -692,7 +692,7 @@ end
 
 function delete_first_line(filename::AbstractString)
     io = open(filename)
-    lines = readlines(io,chomp=false)
+    lines = readlines(io,keep=true)
     close(io)
     io = open(filename, "w")
     for i = 2:length(lines)
@@ -753,27 +753,27 @@ function write_fileproperties(io::JSeis)
     end
 
     # 3-point geometry
-    if isnull(io.geom) == false
+    if io.geom != nothing
         geometry = new_child(customproperties, "parset")
         set_attribute(geometry, "name", "Geometry")
-        write_parproperty(geometry, "u1", "long",   " $(get(io.geom).u1) ")
-        write_parproperty(geometry, "un", "long",   " $(get(io.geom).un) ")
-        write_parproperty(geometry, "v1", "long",   " $(get(io.geom).v1) ")
-        write_parproperty(geometry, "vn", "long",   " $(get(io.geom).vn) ")
-        write_parproperty(geometry, "w1", "long",   " $(get(io.geom).w1) ")
-        write_parproperty(geometry, "wn", "long",   " $(get(io.geom).wn) ")
-        write_parproperty(geometry, "ox", "double", " $(get(io.geom).ox) ")
-        write_parproperty(geometry, "oy", "double", " $(get(io.geom).oy) ")
-        write_parproperty(geometry, "oz", "double", " $(get(io.geom).oz) ")
-        write_parproperty(geometry, "ux", "double", " $(get(io.geom).ux) ")
-        write_parproperty(geometry, "uy", "double", " $(get(io.geom).uy) ")
-        write_parproperty(geometry, "uz", "double", " $(get(io.geom).uz) ")
-        write_parproperty(geometry, "vx", "double", " $(get(io.geom).vx) ")
-        write_parproperty(geometry, "vy", "double", " $(get(io.geom).vy) ")
-        write_parproperty(geometry, "vz", "double", " $(get(io.geom).vz) ")
-        write_parproperty(geometry, "wx", "double", " $(get(io.geom).wx) ")
-        write_parproperty(geometry, "wy", "double", " $(get(io.geom).wy) ")
-        write_parproperty(geometry, "wz", "double", " $(get(io.geom).wz) ")
+        write_parproperty(geometry, "u1", "long",   " $(io.geom.u1) ")
+        write_parproperty(geometry, "un", "long",   " $(io.geom.un) ")
+        write_parproperty(geometry, "v1", "long",   " $(io.geom.v1) ")
+        write_parproperty(geometry, "vn", "long",   " $(io.geom.vn) ")
+        write_parproperty(geometry, "w1", "long",   " $(io.geom.w1) ")
+        write_parproperty(geometry, "wn", "long",   " $(io.geom.wn) ")
+        write_parproperty(geometry, "ox", "double", " $(io.geom.ox) ")
+        write_parproperty(geometry, "oy", "double", " $(io.geom.oy) ")
+        write_parproperty(geometry, "oz", "double", " $(io.geom.oz) ")
+        write_parproperty(geometry, "ux", "double", " $(io.geom.ux) ")
+        write_parproperty(geometry, "uy", "double", " $(io.geom.uy) ")
+        write_parproperty(geometry, "uz", "double", " $(io.geom.uz) ")
+        write_parproperty(geometry, "vx", "double", " $(io.geom.vx) ")
+        write_parproperty(geometry, "vy", "double", " $(io.geom.vy) ")
+        write_parproperty(geometry, "vz", "double", " $(io.geom.vz) ")
+        write_parproperty(geometry, "wx", "double", " $(io.geom.wx) ")
+        write_parproperty(geometry, "wy", "double", " $(io.geom.wy) ")
+        write_parproperty(geometry, "wz", "double", " $(io.geom.wz) ")
     end
 
     # Write data
@@ -1029,7 +1029,7 @@ end
 
 function make_extents(nextents::Int, secondaries::Array{String,1}, filename::String, axis_lengths::Array{Int64,1}, bytespertrace::Int64, basename::String)
     isec, nsec = 1, length(secondaries)
-    extents = Array{Extent}(nextents)
+    extents = Array{Extent}(undef, nextents)
     total_size = prod(axis_lengths[2:end]) * bytespertrace
     extent_size = ceil(Int64, prod(axis_lengths[3:end]) / nextents) * axis_lengths[2] * bytespertrace
     for i = 1:nextents
@@ -1062,19 +1062,19 @@ Get the value of the trace property `prop::TraceProperty` stored in the header `
 `io=jsopen("data.js"); get(prop(io, "REC_X"), readframehdrs(io,1)[:,1])`
 """
 function get(prop::TraceProperty{T}, hdr::AbstractArray{UInt8,1}) where T<:Number
-    iohdr = IOBuffer(hdr)
+    iohdr = IOBuffer(hdr, read=true)
     seek(iohdr, prop.byteoffset)
     return read(iohdr, T)
 end
 function get(prop::TraceProperty{Array{T,1}}, hdr::AbstractArray{UInt8,1}) where T<:Union{Int32,Int64,AbstractFloat}
-    iohdr = IOBuffer(hdr)
+    iohdr = IOBuffer(hdr, read=true)
     seek(iohdr, prop.byteoffset)
-    return read(iohdr, T, prop.def.elementcount)
+    return read!(iohdr, Array{T,1}(undef, prop.def.elementcount))
 end
 function get(prop::TraceProperty{Array{UInt8,1}}, hdr::AbstractArray{UInt8,1})
-    iohdr = IOBuffer(hdr)
+    iohdr = IOBuffer(hdr, read=true)
     seek(iohdr, prop.byteoffset)
-    return strip(String(copy(read(iohdr, UInt8, prop.def.elementcount))),'\0')
+    return strip(String(copy(read!(iohdr, Array{UInt8,1}(undef, prop.def.elementcount)))),'\0')
 end
 """
     get(prop, hdrs, i)
@@ -1093,21 +1093,21 @@ Set the value of the trace property `prop::TraceProperty` stored in the header o
 """
 function set!(prop::TraceProperty, hdrs::AbstractArray{UInt8,2}, i::Int64, value::T) where T<:Number
     @assert prop.def.elementcount == 1
-    iohdr = IOBuffer(vec(hdrs), false, true)
+    iohdr = IOBuffer(vec(hdrs), read=true, write=true)
     seek(iohdr, (i-1)*size(hdrs,1) + prop.byteoffset)
     write(iohdr, convert(prop.def.format, value))
 end
 function set!(prop::TraceProperty, hdrs::AbstractArray{UInt8,2}, i::Int64, value::Array{T}) where T<:Number
     @assert length(value) == prop.def.elementcount
-    iohdr = IOBuffer(vec(hdrs), false, true)
+    iohdr = IOBuffer(vec(hdrs), read=true, write=true)
     seek(iohdr, (i-1)*size(hdrs,1) + prop.byteoffset)
     write(iohdr, convert(prop.def.format, prop.def.elementcount == 1 ? value[1] : value))
 end
 function set!(prop::TraceProperty, hdrs::AbstractArray{UInt8,2}, i::Int64, value::AbstractString)
     @assert length(value) < prop.def.elementcount
-    iohdr = IOBuffer(vec(hdrs), false, true)
+    iohdr = IOBuffer(vec(hdrs), read=true, write=true)
     seek(iohdr, (i-1)*size(hdrs,1) + prop.byteoffset)
-    write(iohdr, convert(Array{UInt8},value))
+    write(iohdr, unsafe_wrap(Array{UInt8}, pointer(value), sizeof(value)))
 end
 
 """
@@ -1510,7 +1510,8 @@ function parserngs(io::JSeis, smprng::Union{Int,AbstractRange{Int},Colon}, trcrn
     nrng = ntuple(i->length(rng[i]), N)::NTuple{N,Int}
     smprng::StepRange{Int,Int}, trcrng::StepRange{Int,Int}, rng::NTuple{N,StepRange{Int,Int}}, nrng::NTuple{N,Int}
 end
-parserng(io::JSeis,rng::Int,i) = StepRange(rng:1:rng)
+parserng(io::JSeis,rng::Int,i) = StepRange(rng,1,rng)
+parserng(io::JSeis,rng::StepRange{Int},i) = rng
 parserng(io::JSeis,rng::AbstractRange{Int},i) = StepRange(rng)
 parserng(io::JSeis,rng::Colon,i) = lrange(io,i)::StepRange{Int,Int}
 
@@ -1646,7 +1647,7 @@ trcs = readtrcs(jsopen("data_5D.js"), :, :, 2, 2:2:10, 1:10)
 """
 function readtrcs(io::JSeis, rng::Vararg{Union{Int,AbstractRange{Int},Colon},N}) where N
     smprng, trcrng, _rng, nrng = parserngs(io, rng...)
-    trcs = Array{Float32}(length(smprng), length(trcrng), nrng...)
+    trcs = Array{Float32}(undef, length(smprng), length(trcrng), nrng...)
     readtrcs_impl!(io, trcs, smprng, trcrng, _rng...)
     trcs
 end
@@ -1714,7 +1715,7 @@ hdrs = readhdrs(jsopen("data_5D.js"), :, :, 2, 2:2:10, 1:10)
 function readhdrs(io::JSeis, rng::Vararg{Union{Int,AbstractRange{Int},Colon},N}) where N
     @assert rng[1] == Colon()
     smprng, trcrng, _rng, nrng = parserngs(io, rng...)
-    hdrs = Array{UInt8,N}(headerlength(io), length(trcrng), nrng...)
+    hdrs = Array{UInt8,N}(undef, headerlength(io), length(trcrng), nrng...)
     readhdrs_impl!(io, hdrs, trcrng, _rng...)
     hdrs
 end
@@ -1780,8 +1781,8 @@ trcs, hdrs = read(jsopen("data_5D.js"), :, :, 2, 2:2:10, 1:10)
 """
 function read(io::JSeis, rng::Vararg{Union{Int,AbstractRange{Int},Colon},N}) where N
     smprng, trcrng, _rng, nrng = parserngs(io, rng...)
-    trcs = Array{Float32}(length(smprng), length(trcrng), nrng...)::Array{Float32,N}
-    hdrs = Array{UInt8}(headerlength(io), length(trcrng), nrng...)::Array{UInt8,N}
+    trcs = Array{Float32}(undef, length(smprng), length(trcrng), nrng...)::Array{Float32,N}
+    hdrs = Array{UInt8}(undef, headerlength(io), length(trcrng), nrng...)::Array{UInt8,N}
     read_impl!(io, trcs, hdrs, smprng, trcrng, _rng...)
     trcs, hdrs
 end
@@ -2031,7 +2032,7 @@ end
 ```
 """
 function ind2sub(io::JSeis, i::Int)
-    idx = ind2sub(size(io)[3:end], i)
+    idx = Tuple(CartesianIndices(size(io)[3:end]))[i]
     return ntuple(i->io.axis_lstarts[2+i] + (idx[i] - 1) * io.axis_lincs[2+i], length(idx))
 end
 
@@ -2047,7 +2048,7 @@ function leftjustify!(io::JSeis, trcs::Array{Float32, 2}, hdrs::Array{UInt8, 2})
     end
     proptyp = prop(io, "TRC_TYPE")
     j, ntrcs, nsamp, nhead = 1, size(trcs, 2), size(trcs,1), size(hdrs,1)
-    tmp_trc, tmp_hdr = Array{Float32}(size(io,1)), Array{UInt8}(headerlength(io))
+    tmp_trc, tmp_hdr = Array{Float32}(undef, size(io,1)), Array{UInt8}(undef, headerlength(io))
     for i = 1:ntrcs
         if get(proptyp, hdrs, i) != tracetype[:live]
             for j = i+1:ntrcs
@@ -2095,7 +2096,7 @@ function regularize!(io::JSeis, trcs::Array{Float32, 2}, hdrs::Array{UInt8, 2}, 
         if trace_mask[i] == 0
             set!(proptrc, hdrs, i, i)
             set!(proptyp, hdrs, i, tracetype[:dead])
-            trcs[:,i] = 0.0
+            trcs[:,i] .= 0.0
         end
     end
 end
@@ -2295,14 +2296,14 @@ lincs(io::JSeis, i::Int) = io.axis_lincs[i]
 Returns the logical ranges of the framework axes of the JavaSeis dataset corresponding
 to `io::JSeis`.
 """
-lrange(io::JSeis) = ntuple(i->range(io.axis_lstarts[i], io.axis_lincs[i], io.axis_lengths[i]), ndims(io))
+lrange(io::JSeis) = ntuple(i->range(io.axis_lstarts[i], step=io.axis_lincs[i], length=io.axis_lengths[i]), ndims(io))
 """
     lrange(io, i)
 
 Returns the logical range of the framework axes for dimension `i` of the JavaSeis dataset corresponding
 to `io::JSeis`.
 """
-lrange(io::JSeis, i::Int) = range(io.axis_lstarts[i], io.axis_lincs[i], io.axis_lengths[i])
+lrange(io::JSeis, i::Int) = range(io.axis_lstarts[i], step=io.axis_lincs[i], length=io.axis_lengths[i])
 """
     isempty(io)
 
@@ -2324,4 +2325,4 @@ in(prop::Union{String, TracePropertyDef, TraceProperty},  io::JSeis) = in(prop, 
 If `io::JSeis` contains a geometry definition, then return a geometry of type `Geometry`.  Otherwise,
 return `nothing`.
 """
-geometry(io::JSeis) = isnull(io.geom) ? nothing : get(io.geom)
+geometry(io::JSeis) = io.geom

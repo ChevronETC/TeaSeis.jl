@@ -1,9 +1,4 @@
-using TeaSeis, Test
-
-# macro for compatability with julia 0.5
-macro mytest_warn(msg, expr)
-    return :(@test_warn $msg $expr)
-end
+using TeaSeis, Test, Random
 
 ENV["JAVASEIS_DATA_HOME"] = ""
 ENV["PROMAX_DATA_HOME"] = ""
@@ -165,7 +160,7 @@ mkdir(rundir)
         end
     end
     close(io)
-    @mytest_warn "Corrupt" jsopen(joinpath(rundir,"data.js")) # see top of file for @mytest_warn macro (for compatability with julia 0.5)
+    @test_warn "" jsopen(joinpath(rundir,"data.js"))
     rm(jsopen(joinpath(rundir,"data.js")))
 
     @testset "lstrt=$(lstrt),lincrs=$(lincrs),sz=$(sz),second=$(second),T=$(T)" for lstrt in ([1,1,1,1,1], [10,20,30,40,50]), lincrs in ([1,1,1,1,1],[1,2,3,4,5]), sz in ([5,6,7], [5,6,7,8], [5,6,7,8,9]), second in (["."],["$(rundir)/second"]), T in (Float32, Int16)
@@ -237,7 +232,7 @@ mkdir(rundir)
         @test filesize(joinpath(filename1, "TraceMap")) == prod(sz[3:end]) * sizeof(Int32)
         @test io.mapped == true
         iotrcmp = open(joinpath(filename1, "TraceMap"))
-        @test read(iotrcmp,Int32,prod(sz[3:end])) == zeros(Int32,prod(sz[3:end]))
+        @test read!(iotrcmp,Array{Int32}(undef,prod(sz[3:end]))) == zeros(Int32,prod(sz[3:end]))
         close(iotrcmp)
 
         #
@@ -313,13 +308,13 @@ mkdir(rundir)
             map(itrc->set!(prop(io,propVI32), hdrs, itrc, [itrc,idxs[1]]), 1:sz[2])
             map(itrc->set!(prop(io,propVI64), hdrs, itrc, [itrc,idxs[1]]), 1:sz[2])
             map(itrc->set!(prop(io,propSTR), hdrs, itrc, "TEST"         ), 1:sz[2])
-            writeframe(io, reshape(trcs[:,:,ind2sub(size(io)[3:end],i)...],sz[1],sz[2]), hdrs)
+            writeframe(io, reshape(trcs[:,:,CartesianIndices(size(io)[3:end])[i]],sz[1],sz[2]), hdrs)
             @test isempty(io) == false
         end
 
         # ensure TraceMap was correctly written
         iotrcmap = open(joinpath(filename1, "TraceMap"))
-        @test read(iotrcmap, Int32, length(io)) == sz[2]*ones(Int32,prod(sz[3:end]))
+        @test read!(iotrcmap, Array{Int32}(undef,length(io))) == sz[2]*ones(Int32,prod(sz[3:end]))
         close(iotrcmap)
 
         # ensure that the trace extents were written properly
@@ -333,7 +328,7 @@ mkdir(rundir)
 
             if T == Float32
                 ioext = open(io.trcextents[i].path)
-                trcstest = convert(Array{Float32,1}, read(ioext, T, div(io.trcextents[i].size, sizeof(T))))
+                trcstest = convert(Array{Float32,1}, read!(ioext, Array{T}(undef, div(io.trcextents[i].size, sizeof(T)))))
                 close(ioext)
                 strt = div(io.trcextents[i].start, sizeof(T)) + 1
                 stop = strt + div(io.trcextents[i].size, sizeof(T)) - 1
@@ -362,7 +357,7 @@ mkdir(rundir)
             @test typeof(hdrs) == Array{UInt8,2}
             @test size(trcstest) == (sz[1],sz[2])
             @test size(hdrs) == (headerlength(io),sz[2])
-            @test vec(trcstest) ≈ vec(trcs[:,:,ind2sub(size(io)[3:end],i)...])
+            @test vec(trcstest) ≈ vec(trcs[:,:,CartesianIndices(size(io)[3:end])[i]])
             for itrc = 1:sz[2]
                 @test get(prop(io,stockprop[:TRACE]), hdrs, itrc) == lstrt[2] + (itrc-1)*lincrs[2]
                 @test get(prop(io,stockprop[:FRAME]), hdrs, itrc) == idxs[1]

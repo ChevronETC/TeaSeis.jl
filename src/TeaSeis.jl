@@ -1,6 +1,6 @@
 module TeaSeis
 
-using LightXML
+using Dates, LightXML
 
 import
 Base.==,
