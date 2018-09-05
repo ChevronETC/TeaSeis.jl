@@ -24,6 +24,10 @@ Base.cp,
 Base.mv,
 Base.rm
 
+if VERSION < v"1.0.0"
+    import Base.ind2sub, Base.sub2ind
+end
+
 include("traceproperty.jl")
 include("dataproperty.jl")
 include("stockprops.jl")
@@ -41,8 +45,6 @@ TracePropertyDef,
 dataproperty,
 geometry,
 hasdataproperty,
-ind2sub,
-sub2ind,
 jsopen,
 jscreate,
 labels,
@@ -85,5 +87,9 @@ stockdatatype,
 tracetype,
 leftjustify!,
 regularize!
+
+if VERSION >= v"1.0.0"
+    export ind2sub, sub2ind
+end
 
 end
