@@ -11,20 +11,22 @@ Base.close,
 Base.empty!,
 Base.get,
 Base.in,
-Base.ind2sub,
 Base.isempty,
 Base.length,
 Base.ndims,
 Base.read,
 Base.read!,
 Base.sizeof,
-Base.sub2ind,
 Base.write,
 Base.size,
 Base.show,
 Base.cp,
 Base.mv,
 Base.rm
+
+if VERSION < v"1.0.0"
+    import Base.ind2sub, Base.sub2ind
+end
 
 include("traceproperty.jl")
 include("dataproperty.jl")
@@ -85,5 +87,9 @@ stockdatatype,
 tracetype,
 leftjustify!,
 regularize!
+
+if VERSION >= v"1.0.0"
+    export ind2sub, sub2ind
+end
 
 end
