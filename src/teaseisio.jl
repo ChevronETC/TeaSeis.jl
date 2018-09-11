@@ -973,8 +973,8 @@ function extentdir(secondary::String, filename::String)
         return abspath(filename)
     elseif datahome != ""
         filename = abspath(filename)
-        if contains(filename, datahome) == true
-            return normpath(replace(filename, datahome, Sys.iswindows() ? "$(secondary)//" : "$(secondary)/"))
+        if occursin(datahome, filename) == true
+            return normpath(replace(filename, datahome => (Sys.iswindows() ? "$(secondary)//" : "$(secondary)/")))
         end
         if isrelative == true && startswith(pwd(),datahome) == false
             error("JAVASEIS_DATA_HOME or PROMAX_DATA_HOME is set, and JavaSeis filename is relative,

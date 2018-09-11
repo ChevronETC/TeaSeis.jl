@@ -704,3 +704,14 @@ end
     @test hasdataproperty(io, "NOPROP") == false
     @test dataproperty(io,"PROP") == 10
 end
+
+@testset "teaseisio, secondaries with primary" begin
+    c = pwd()
+    ENV["JAVASEIS_DATA_HOME"] = joinpath(c, "primary")
+    mkpath(joinpath(ENV["JAVASEIS_DATA_HOME"], "foo"))
+    cd(joinpath(ENV["JAVASEIS_DATA_HOME"], "foo"))
+    io = jsopen("test.js", "w", axis_lengths=[3,3,3], secondaries=[joinpath(c,"second")])
+    trcs = rand(3,3,3)
+    write(io, trcs, :, :, :)
+    @test isfile(joinpath(c,"second","foo","test.js","TraceFile0"))
+end
