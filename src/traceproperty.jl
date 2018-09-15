@@ -4,7 +4,7 @@ struct TracePropertyDef{T}
     format::Type{T}
     elementcount::Int32
 
-    function TracePropertyDef(label::AbstractString, description::AbstractString, format::DataType, elementcount::Integer)
+    function TracePropertyDef{T}(label::AbstractString, description::AbstractString, format::DataType, elementcount::Integer) where T
         _format = format
         if format == UInt8
             _format = Array{UInt8,1}
