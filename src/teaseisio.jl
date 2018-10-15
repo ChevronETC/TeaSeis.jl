@@ -935,7 +935,7 @@ Compute the fold of a frame where io is JSeis corresponding to the dataset, and 
 For example: `io=jsopen("file.js"); fold(io, readframehdrs(io,1))`
 """
 function fold(io::JSeis, hdrs::Array{UInt8,2})
-    trctyp = prop(io, "TRC_TYPE")
+    trctyp = prop(io, stockprop[:TRC_TYPE])
     mapreduce(i->get(trctyp, hdrs, i) == tracetype[:live] ? 1 : 0, +, 1:size(hdrs,2))
 end
 
@@ -1114,12 +1114,13 @@ end
     prop(io, propertyname)
 
 Get a trace property from `io::JSeis` where `propertyname` is either `String` or `TracePropertyDef`.
+Note that if  `propertyname` is a String, then this method produces a type-unstable result.
 For example:
 
  ```julia
 io = jsopen("data.js")
-p = prop(io, "REC_X")            # using an `String`
-p = prop(io, stockprop[:REC_X])  # using a `TracePropertyDef`
+p = prop(io, "REC_X")            # using a `String`, output type of prop is not inferred
+p = prop(io, stockprop[:REC_X])  # using a `TracePropertyDef`, output type of prop is inferred
 ```
 """
 function prop(io::JSeis, _property::String)
@@ -1130,7 +1131,14 @@ function prop(io::JSeis, _property::String)
     end
     error("unable to find trace property with label $(_property)\n")
 end
-prop(io::JSeis, _property::TracePropertyDef) = prop(io, _property.label)
+function prop(io::JSeis, _property::TracePropertyDef{T}) where {T}
+    for property in io.properties
+        if _property.label == property.def.label
+            return property::TraceProperty{T}
+        end
+    end
+    error("unable to find trace property with label $(_property)\n")
+end
 
 """
     copy!(ioout, hdrsout, ioin, hdrsin)
@@ -1871,11 +1879,14 @@ function writeframe(io::JSeis, trcs::AbstractArray{Float32, 2}, idx::Int...)
     @assert length(idx) == ndims(io)-2
     hdrs = allocframehdrs(io)
 
-    map(i->set!(prop(io, io.axis_propdefs[2]), hdrs, i, Int(io.axis_lstarts[2] + (i-1)*io.axis_lincs[2])), 1:io.axis_lengths[2])
+    props = [prop(io, io.axis_propdefs[idim]) for idim = 1:ndims(io)]
+
+    map(i->set!(props[2], hdrs, i, Int(io.axis_lstarts[2] + (i-1)*io.axis_lincs[2])), 1:io.axis_lengths[2])
     for idim = 3:ndims(io)
-        map(i->set!(prop(io, io.axis_propdefs[idim]), hdrs, i, idx[idim-2]), 1:io.axis_lengths[2])
+        map(i->set!(props[idim], hdrs, i, idx[idim-2]), 1:io.axis_lengths[2])
     end
-    map(i->set!(prop(io, stockprop[:TRC_TYPE]), hdrs, i, tracetype[:live]), 1:io.axis_lengths[2])
+    proptt = prop(io, stockprop[:TRC_TYPE])
+    map(i->set!(proptt, hdrs, i, tracetype[:live]), 1:io.axis_lengths[2])
     writeframe_impl(io, trcs, hdrs, Int(io.axis_lengths[2]), sub2ind(io, idx))
 end
 writeframe(io::JSeis, trcs::AbstractArray{Float64, 2}, idx::Int...) = writeframe(io, convert(Array{Float32, 2}, trcs), idx...)
@@ -2008,9 +2019,10 @@ function sub2ind(io::JSeis, idx::NTuple)
 end
 function sub2ind(io::JSeis, hdrs::AbstractArray{UInt8,2})
     ptrctype = prop(io, stockprop[:TRC_TYPE])
+    props = [prop(io, io.axis_propdefs[i]) for i=3:ndims(io)]
     for itrc = 1:size(hdrs,2)
         if get(ptrctype, hdrs, itrc) == tracetype[:live]
-            idx = ntuple(i->get(prop(io, io.axis_propdefs[2+i]), hdrs, itrc), length(io.axis_lengths) - 2)
+            idx = ntuple(i->get(props[i], hdrs, itrc), length(io.axis_lengths) - 2)
             return sub2ind(io, idx)
         end
     end
@@ -2046,7 +2058,7 @@ function leftjustify!(io::JSeis, trcs::Array{Float32, 2}, hdrs::Array{UInt8, 2})
     if fold(io, hdrs) == io.axis_lengths[2]
         return
     end
-    proptyp = prop(io, "TRC_TYPE")
+    proptyp = prop(io, stockprop[:TRC_TYPE])
     j, ntrcs, nsamp, nhead = 1, size(trcs, 2), size(trcs,1), size(hdrs,1)
     tmp_trc, tmp_hdr = Array{Float32}(undef, size(io,1)), Array{UInt8}(undef, headerlength(io))
     for i = 1:ntrcs
