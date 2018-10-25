@@ -2,7 +2,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/ChevronETC/TeaSeis.jl/badge.svg?branch=master)](https://coveralls.io/github/ChevronETC/TeaSeis.jl?branch=master)
 
 <h1>TeaSeis.jl</h1>
-TeaSeis.jl is a Julia library for reading and writing JavaSeis files (The name `TeaSeis.jl` was chosen instead of `JavaSeis.jl` due to potential trademark issues).  The JavaSeis file format is used in various software projects including <a href=https://www.landmark.solutions/seisspace-promax>SeisSpace</a>.  The original library is written in <a href=http://sourceforge.net/projects/javaseis>Java</a>.  There are also <a href=http://www.jseisio.com>C++</a> and <a href=https://github.com/asbjorn/pyjavaseis>Python]</a> implementations available.  Similar to the C++ library, TeaSeis.jl is a stripped down version of the original Java library.  In particular, the intent is to only supply methods for reading and writing from and to JavaSeis files.
+TeaSeis.jl is a Julia library for reading and writing JavaSeis files (The name `TeaSeis.jl` was chosen instead of `JavaSeis.jl` due to potential trademark issues).  The JavaSeis file format is used in various software projects including <a href=https://www.landmark.solutions/seisspace-promax>SeisSpace</a>.  The original library is written in <a href=http://sourceforge.net/projects/javaseis>Java</a>.  There are also <a href=http://www.jseisio.com>C++</a> and <a href=https://github.com/asbjorn/pyjavaseis>Python</a> implementations available.  Similar to the C++ library, TeaSeis.jl is a stripped down version of the original Java library.  In particular, the intent is to only supply methods for reading and writing from and to JavaSeis files.
 
 ```@contents
 depth = 3
@@ -371,9 +371,10 @@ write(io, rehsape(trcs, 10, 1, 1), :, 1, 1)
 
 The JavaSeis data format does not specify any trace properties.  However, there are commonly used (<b>stock</b>) properties (listed in [STOCKPROPS.md](STOCKPROPS.md), as well as a minimal set of properties that are expected by SeisSpace (listed in [SSPROPS.md](SSPROPS.md)).  It is unusual when a stock property does not suit your needs.  But, if need be, you can define a custom property using the `TracePropertyDef` constructor:
 ```julia
-pdef = TracePropertyDef("label", "description", Float32, 1)
+pdef = TracePropertyDef("label", "description", Float32)
+pdef = TracePropertyDef("label", "description", Vector{Float32}, 2)
 ```
-The arguments to `TracePropertyDef` are the <b>label</b>, <b>description</b>, <b>type</b>, and the <b>number of elements</b> stored in the property. The stock properties are defined in [src/stockprops.jl](src/stockprops.jl) using a Julia dictionary: `stockprop`.  For example, access a stock definition for the `TRACE` property:
+The arguments to `TracePropertyDef` are the <b>label</b>, <b>description</b>, <b>type</b>, and, optionally, the <b>number of elements</b> stored in the property. The stock properties are defined in [src/stockprops.jl](src/stockprops.jl) using a Julia dictionary: `stockprop`.  For example, access a stock definition for the `TRACE` property:
 ```julia
 pdef = stockprop[:TRACE]
 ```
@@ -381,6 +382,7 @@ Given a JavaSeis file `io::JSeis` and a stock definition, we can access the corr
 ```julia
 p = prop(io, pdef)    # access using a `TracePropertyDef`
 p = prop(io, "TRACE") # alternatively, access using the trace property definition label
+p = prop(io, "TRACE", Int32) # type-stable version of previous line
 ```
 Given, additionally, a frame of headers `hdrs::Array{UInt8,2}`, we can get and set the values stored in a property:
 ```julia

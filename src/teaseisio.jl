@@ -1,4 +1,4 @@
-mutable struct JSeis
+mutable struct JSeis{T<:NamedTuple,U<:NamedTuple,C<:Union{TraceCompressor{Float32}, TraceCompressor{Int16}}}
     filename::String
     mode::String
     description::String
@@ -6,9 +6,9 @@ mutable struct JSeis
     datatype::String
     dataformat::DataType
     dataorder::String
-    properties::Array{TraceProperty,1}
+    properties::T
     axis_lengths::Array{Int,1}
-    axis_propdefs::Array{TracePropertyDef,1}
+    axis_propdefs::U
     axis_units::Array{String,1}
     axis_domains::Array{String,1}
     axis_lstarts::Array{Int,1}
@@ -23,9 +23,16 @@ mutable struct JSeis
     hdrextents::Array{Extent,1}
     currentvolume::Int
     map::Array{Int32,1}
-    compressor::Union{TraceCompressor{Float32}, TraceCompressor{Int16}}
+    hdrlength::Int
+    compressor::C
 
-    JSeis() = new()
+    function JSeis(properties::T, axis_propdefs::U, compressor::C) where {T,U,C}
+        io=new{T,U,C}()
+        io.properties=properties
+        io.axis_propdefs=axis_propdefs
+        io.compressor = compressor
+        io
+    end
 end
 
 # open/close
@@ -89,31 +96,48 @@ function jsopen(
         properties_rm      = Array{TracePropertyDef}(undef, 0), # only used in conjunction with similarto, dis-allowed if properties is set
         dataproperties_add = Array{DataProperty}(undef, 0),     # only used in conjunction with similarto, dis-allowed if dataproperties is set
         dataproperties_rm  = Array{DataProperty}(undef, 0))     # only used in conjunction with similarto, dis-allowed if dataproperties is set
-    io = JSeis()
+    local traceproperties, _axis_propdefs, _axis_lengths, _dataformat, xml_fileproperties
+    if mode == "r" || mode == "r+"
+        xml_fileproperties = parse_file(joinpath(filename, "FileProperties.xml"))
+        traceproperties = get_trace_properties(xml_fileproperties)
+        _axis_propdefs = get_axis_propdefs(traceproperties, xml_fileproperties)
+        _axis_lengths = get_axis_lengths(xml_fileproperties)
+        _dataformat = get_dataformat(xml_fileproperties)
+    elseif mode == "w" && similarto == ""
+        traceproperties, _axis_propdefs = get_trace_properties(length(axis_lengths), properties, properties_add, properties_rm, axis_propdefs, similarto)
+        _axis_lengths = axis_lengths
+        _dataformat = dataformat == nothing ? Float32 : dataformat
+    elseif mode == "w" && similarto != ""
+        traceproperties, _axis_propdefs = get_trace_properties(length(axis_lengths), properties, properties_add, properties_rm, axis_propdefs, similarto)
+        iosim = jsopen(similarto)
+        _axis_lengths = length(axis_lengths) == 0 ? [size(iosim)...] : axis_lengths
+        _dataformat = dataformat == nothing ? iosim.dataformat : dataformat
+    end
+
+    compressor = TraceCompressor(_axis_lengths[1], _dataformat)
+    io = JSeis(traceproperties, _axis_propdefs, compressor)
     io.filename = filename
     io.mode = mode
     io.currentvolume = -1
+    io.hdrlength = headerlength(io.properties)
 
     if mode == "r" || mode == "r+"
         io2 = open(joinpath(filename, "Name.properties"), "r")
         io.description = get_description(io2)
         close(io2)
 
-        xml = parse_file(joinpath(filename, "FileProperties.xml"))
-        io.mapped         = get_mapped(xml)
-        io.datatype       = get_datatype(xml)
-        io.dataformat     = get_dataformat(xml)
-        io.dataorder      = get_dataorder(xml)
-        io.properties     = get_trace_properties(xml)
-        io.axis_lengths   = get_axis_lengths(xml)
-        io.axis_propdefs  = get_axis_propdefs(io.properties, xml)
-        io.axis_units     = get_axis_units(xml)
-        io.axis_domains   = get_axis_domains(xml)
-        io.axis_lstarts   = get_axis_lstarts(xml)
-        io.axis_lincs     = get_axis_lincs(xml)
-        io.axis_pstarts   = get_axis_pstarts(xml)
-        io.axis_pincs     = get_axis_pincs(xml)
-        io.dataproperties = get_dataproperties(xml)
+        io.mapped         = get_mapped(xml_fileproperties)
+        io.datatype       = get_datatype(xml_fileproperties)
+        io.dataformat     = _dataformat
+        io.dataorder      = get_dataorder(xml_fileproperties)
+        io.axis_lengths   = _axis_lengths
+        io.axis_units     = get_axis_units(xml_fileproperties)
+        io.axis_domains   = get_axis_domains(xml_fileproperties)
+        io.axis_lstarts   = get_axis_lstarts(xml_fileproperties)
+        io.axis_lincs     = get_axis_lincs(xml_fileproperties)
+        io.axis_pstarts   = get_axis_pstarts(xml_fileproperties)
+        io.axis_pincs     = get_axis_pincs(xml_fileproperties)
+        io.dataproperties = get_dataproperties(xml_fileproperties)
         io.geom           = nothing
 
         io.hastraces = false
@@ -135,8 +159,6 @@ function jsopen(
         io.currentvolume = -1
         io.map = zeros(Int32, io.axis_lengths[3])
 
-        io.compressor = TraceCompressor(io.axis_lengths[1], io.dataformat)
-
         return io
     end
 
@@ -147,10 +169,9 @@ function jsopen(
     if mode == "w" && similarto == ""
         io.mapped         = mapped == nothing ? true : mapped
         io.datatype       = datatype == nothing ? stockdatatype[:CUSTOM] : datatype
-        io.dataformat     = dataformat == nothing ? Float32 : dataformat
+        io.dataformat     = _dataformat
         io.dataorder      = dataorder == "" ? "LITTLE_ENDIAN" : dataorder
         io.axis_lengths   = axis_lengths
-        io.axis_propdefs  = axis_propdefs
         io.axis_units     = axis_units
         io.axis_domains   = axis_domains
         io.axis_lstarts   = axis_lstarts
@@ -161,37 +182,7 @@ function jsopen(
         io.geom           = geometry == nothing ? nothing : geometry
         io.secondaries    = secondaries == nothing ? ["."] : secondaries
     elseif mode == "w" && similarto != ""
-        iosim = jsopen(similarto, "r")
-
-        # special handling for trace properties
-        if length(properties) == 0
-            properties = copy(propdef(iosim.properties))
-        else
-            @assert length(properties_add) == 0
-            @assert length(properties_rm) == 0
-        end
-
-        if length(properties_add) != 0
-            for prop in properties_add
-                if in(prop, properties) == false
-                    push!(properties, prop)
-                end
-            end
-        end
-
-        if length(properties_rm) != 0
-            N = length(properties) - length(properties_rm)
-            properties_new = Array{TracePropertyDef}(N)
-            k = 1
-            for i = 1:length(properties), j = 1:length(properties_rm)
-                if properties_rm[j].lbl == properties[i].lbl
-                    break
-                end
-                properties_new[k] = properties[i]
-                k += 1
-            end
-            properties = properties_new
-        end
+        iosim = jsopen(similarto)
 
         # special handling for data properties
         if length(dataproperties) == 0
@@ -212,10 +203,9 @@ function jsopen(
 
         io.mapped         = mapped == nothing ? iosim.mapped : mapped
         io.datatype       = datatype == nothing ? iosim.datatype : datatype
-        io.dataformat     = dataformat == nothing ? iosim.dataformat : dataformat
+        io.dataformat     = _dataformat
         io.dataorder      = dataorder == "" ? iosim.dataorder : dataorder
-        io.axis_lengths   = length(axis_lengths) == 0 ? copy(iosim.axis_lengths) : axis_lengths
-        io.axis_propdefs  = length(axis_propdefs) == 0 ? copy(iosim.axis_propdefs) : axis_propdefs
+        io.axis_lengths   = _axis_lengths
         io.axis_units     = length(axis_units) == 0 ? copy(iosim.axis_units) : axis_units
         io.axis_domains   = length(axis_domains) == 0 ? copy(iosim.axis_domains) : axis_domains
         io.axis_lstarts   = length(axis_lstarts) == 0 ? copy(iosim.axis_lstarts) : axis_lstarts
@@ -254,10 +244,6 @@ end
 
 function jsopen_write(io::JSeis, nextents::Int, ndim::Int, description::String, properties::Array, issimilar::Bool)
     # axes
-    if length(io.axis_propdefs) == 0
-        io.axis_propdefs = [stockprop[:SAMPLE], stockprop[:TRACE], stockprop[:FRAME], stockprop[:VOLUME], stockprop[:HYPRCUBE]][1:min(5,ndim)]
-        map(idim->push!(io.axis_propdefs, TracePropertyDef("DIM$(idim)", "dimension $(idim)", Int32, 1)), 6:ndim)
-    end
     if length(io.axis_units) == 0
         io.axis_units = fill(stockunit[:UNKNOWN], ndim)
     end
@@ -275,36 +261,6 @@ function jsopen_write(io::JSeis, nextents::Int, ndim::Int, description::String, 
     end
     if length(io.axis_pincs) == 0
         io.axis_pincs = ones(Float64, ndim)
-    end
-
-    # trace properties
-    for (i,pdef) in enumerate(io.axis_propdefs)
-        @assert pdef.elementcount == 1
-        # map from JavaSeis axis name to ProMax property label
-        io.axis_propdefs[i] = haskey(dictJStoPM, pdef.label) == true ? TracePropertyDef(dictJStoPM[pdef.label], pdef.description, pdef.format, pdef.elementcount) : pdef
-    end
-
-    # initialize trace properties to an empty array
-    io.properties = Array{TraceProperty}(undef, 0)
-
-    # trace properties, minimal set (as defined by SeisSpace / ProMAX)
-    byteoffset = issimilar == false ? sspropset!(io.properties, 0) : 0
-
-    # trace properties, user defined
-    for propdef in properties
-        if in(propdef, io.properties) == false
-            push!(io.properties, TraceProperty(propdef, byteoffset))
-            byteoffset += sizeof(propdef)
-        end
-    end
-
-    # trace properties, axes
-    for propdef in io.axis_propdefs
-        @assert propdef.format == Int32 || propdef.format == Int64
-        if in(propdef, io.properties) == false
-            push!(io.properties, TraceProperty(propdef, byteoffset))
-            byteoffset += sizeof(propdef)
-        end
     end
 
     # description, if not set by user, we grab it from the filename
@@ -330,12 +286,9 @@ function jsopen_write(io::JSeis, nextents::Int, ndim::Int, description::String, 
     nextents = nextents == 0 ? nextents_heuristic(io.axis_lengths, io.dataformat) : nextents
     nextents = nextents > prod(io.axis_lengths[3:end]) ? prod(io.axis_lengths[3:end]) : nextents
 
-    # compressor
-    io.compressor = TraceCompressor(io.axis_lengths[1], io.dataformat)
-
     # trace and header extents
     io.trcextents = make_extents(nextents, io.secondaries, io.filename, io.axis_lengths, tracelength(io.compressor), "TraceFile")
-    io.hdrextents = make_extents(nextents, io.secondaries, io.filename, io.axis_lengths, headerlength(io.properties), "TraceHeaders")
+    io.hdrextents = make_extents(nextents, io.secondaries, io.filename, io.axis_lengths, io.hdrlength, "TraceHeaders")
 
     # trace map
     io.map = zeros(Int32, io.axis_lengths[3])
@@ -473,16 +426,17 @@ get_axis_pstarts(xml::XMLDocument) = [parse(Float64, s) for s in split(content(g
 get_axis_pincs(xml::XMLDocument)   = [parse(Float64, s) for s in split(content(get_file_property_element(xml, "PhysicalDeltas")))]
 get_dataorder(xml::XMLDocument)    = strip(content(get_file_property_element(xml, "ByteOrder")))
 
-function get_axis_propdefs(properties::Array{TraceProperty, 1}, xml::XMLDocument)
+function get_axis_propdefs(properties, xml::XMLDocument)
     labels = split(content(get_file_property_element(xml, "AxisLabels")))
     propdefs = Array{TracePropertyDef}(undef, 0)
     for (i,label) in enumerate(labels)
         push!(propdefs, get_axis_propdef(properties, label, i))
     end
-    return propdefs
+    names = ntuple(i->Symbol(propdefs[i].label), length(propdefs))
+    NamedTuple{names}(propdefs)
 end
 
-function get_axis_propdef(properties::Array{TraceProperty,1}, label::AbstractString, dim::Int)
+function get_axis_propdef(properties, label::AbstractString, dim::Int)
     # map from JavaSeis axis name to ProMax property label
     plabel = haskey(dictJStoPM, label) == true ? dictJStoPM[label] : label
 
@@ -534,12 +488,88 @@ function get_trace_properties(xml::XMLDocument)
                         offset = parse(Int32, content(par))
                     end
                 end
-                push!(props, TraceProperty(label, description, format, count, offset))
+                push!(props, TraceProperty(TracePropertyDef(label, description, stringtype2type(format, count), count), offset))
             end
-            return props
+            break
         end
     end
-    return props
+    names = ntuple(i->Symbol(props[i].def.label), length(props))
+    return NamedTuple{names}(props)
+end
+
+function get_trace_properties(ndim, propertydefs, propertydefs_add, propertydefs_rm, axis_propdefs, similarto)
+    local _propertydefs, _axis_propdefs
+    if similarto == ""
+        _propertydefs = propertydefs
+        _axis_propdefs = axis_propdefs
+    else
+        iosim = jsopen(similarto, "r")
+
+        # special handling for trace properties
+        if length(propertydefs) == 0
+            _propertydefs = propdef.(collect(iosim.properties))
+        else
+            @assert length(propertydefs_add) == 0
+            @assert length(propertydefs_rm) == 0
+        end
+
+        if length(propertydefs_add) != 0
+            for pdef in propertydefs_add
+                if in(pdef, _propertydefs) == false
+                    push!(_propertydefs, pdef)
+                end
+            end
+        end
+
+        if length(propertydefs_rm) != 0
+            N = length(_propertydefs) - length(propertydefs_rm)
+            propertydefs_new = Array{TracePropertyDef}(N)
+            k = 1
+            for i = 1:length(_propertydefs), j = 1:length(propertydefs_rm)
+                if propertydefs_rm[j].lbl == _propertydefs[i].lbl
+                    break
+                end
+                propertydefs_new[k] = _propertydefs[i]
+                k += 1
+            end
+            _propertydefs = propertydefs_new
+        end
+
+        _axis_propdefs = length(axis_propdefs) == 0 ? collect(iosim.axis_propdefs) : axis_propdefs
+    end
+
+    # initialize trace properties to an empty array
+    properties = Array{TraceProperty}(undef, 0)
+
+    # trace properties, minimal set (as defined by SeisSpace / ProMAX)
+    byteoffset = similarto == "" ? sspropset!(properties, 0) : 0
+
+    # trace properties, user defined
+    for pdef in _propertydefs
+        if in(pdef, properties) == false
+            push!(properties, TraceProperty(pdef, byteoffset))
+            byteoffset += sizeof(pdef)
+        end
+    end
+
+    # axis properties
+    if length(_axis_propdefs) == 0
+        _axis_propdefs = [stockprop[:SAMPLE], stockprop[:TRACE], stockprop[:FRAME], stockprop[:VOLUME], stockprop[:HYPRCUBE]][1:min(5,ndim)]
+        map(idim->push!(_axis_propdefs, TracePropertyDef("DIM$(idim)", "dimension $(idim)", Int32, 1)), 6:ndim)
+    end
+    for (i,pdef) in enumerate(_axis_propdefs)
+        @assert pdef.elementcount == 1
+        # map from JavaSeis axis name to ProMax property label
+        pdef = haskey(dictJStoPM, pdef.label) == true ? TracePropertyDef(dictJStoPM[pdef.label], pdef.description, pdef.format, pdef.elementcount) : pdef
+        _axis_propdefs[i] = pdef
+        if in(pdef, properties) == false
+            push!(properties, TraceProperty(pdef, byteoffset))
+            byteoffset += sizeof(pdef)
+        end
+    end
+    propsymbols = ntuple(i->Symbol(properties[i].def.label), length(properties))
+    axissymbols = ntuple(i->Symbol(_axis_propdefs[i].label), length(_axis_propdefs))
+    NamedTuple{propsymbols}(properties),NamedTuple{axissymbols}(_axis_propdefs)
 end
 
 function get_dataproperties(xml::XMLDocument)
@@ -711,7 +741,7 @@ function write_fileproperties(io::JSeis)
     set_attribute(fileproperties, "name", "FileProperties")
 
     # translate ProMax property labels to JavaSeis axis labels
-    axislabels = proplabel(io.axis_propdefs)
+    axislabels = proplabel.(collect(io.axis_propdefs))
     for (i,lbl) in enumerate(axislabels)
         axislabels[i] = haskey(dictPMtoJS, lbl) == true ? dictPMtoJS[lbl] : lbl
     end
@@ -1046,14 +1076,14 @@ function make_extents(nextents::Int, secondaries::Array{String,1}, filename::Str
 end
 
 # headers
-function headerlength(properties::Array{TraceProperty,1})
+function headerlength(properties)
     hdrlength = 0
-    for property in properties
-        hdrlength += sizeof(property)
+    for key in keys(properties)
+        hdrlength += sizeof(properties[key])
     end
     return hdrlength
 end
-headerlength(io::JSeis) = headerlength(io.properties)
+headerlength(io::JSeis) = io.hdrlength
 
 """
     get(prop, hdr)
@@ -1111,7 +1141,7 @@ function set!(prop::TraceProperty, hdrs::AbstractArray{UInt8,2}, i::Int64, value
 end
 
 """
-    prop(io, propertyname)
+    prop(io, propertyname[, proptype=Any])
 
 Get a trace property from `io::JSeis` where `propertyname` is either `String` or `TracePropertyDef`.
 Note that if  `propertyname` is a String, then this method produces a type-unstable result.
@@ -1120,25 +1150,17 @@ For example:
  ```julia
 io = jsopen("data.js")
 p = prop(io, "REC_X")            # using a `String`, output type of prop is not inferred
+p = prop(io, "REC_X", Float32)   # using a `String`, output type of prop is inferred using `Float32`
 p = prop(io, stockprop[:REC_X])  # using a `TracePropertyDef`, output type of prop is inferred
 ```
+
+Note that in the examples above, the string "REC_X" can be replaced by the symbol `REC_X`.
 """
-function prop(io::JSeis, _property::String)
-    for property in io.properties
-        if _property == property.def.label
-            return property
-        end
-    end
-    error("unable to find trace property with label $(_property)\n")
-end
-function prop(io::JSeis, _property::TracePropertyDef{T}) where {T}
-    for property in io.properties
-        if _property.label == property.def.label
-            return property::TraceProperty{T}
-        end
-    end
-    error("unable to find trace property with label $(_property)\n")
-end
+prop(io::JSeis, _property::Symbol) = io.properties[_property]
+prop(io::JSeis, _property::String) = prop(io, Symbol(_property))
+prop(io::JSeis, _property::Symbol, _T::Type{T}) where {T} = io.properties[_property]::TraceProperty{T}
+prop(io::JSeis, _property::String, _T::Type{T}) where {T} = prop(io, Symbol(_property), T)::TraceProperty{T}
+prop(io::JSeis, _property::TracePropertyDef{T}) where {T} = prop(io, _property.label, T)
 
 """
     copy!(ioout, hdrsout, ioin, hdrsin)
@@ -1156,9 +1178,11 @@ copy!(ioout, hdrsout, ioin, hdrsin)
 """
 function copy!(ioout::JSeis, hdrsout::AbstractArray{UInt8,2}, ioin::JSeis, hdrsin::AbstractArray{UInt8,2})
     @assert size(hdrsout, 2) == size(hdrsin, 2)
-    for propout in ioout.properties
-        if in(propout, ioin.properties) == true
-            propin = prop(ioin, propdef(propout))
+
+    for propoutkey in keys(ioout.properties)
+        if in(propoutkey, ioin.properties)
+            propin = ioin.properties[propoutkey]
+            propout = ioout.properties[propoutkey]
             for i = 1:size(hdrsout,2)
                 set!(propout, hdrsout, i, get(propin, hdrsin, i))
             end
@@ -1876,16 +1900,20 @@ writeframe(jsopen("data_5D.js"), trcs, 1, 2, 3) # write to frame 1, volume 2, hy
 ```
 """
 function writeframe(io::JSeis, trcs::AbstractArray{Float32, 2}, idx::Int...)
-    @assert length(idx) == ndims(io)-2
+    _wrongdims(io,idx) = length(idx) == ndims(io)-2 || error("Dimenions mismatch")
     hdrs = allocframehdrs(io)
 
     props = [prop(io, io.axis_propdefs[idim]) for idim = 1:ndims(io)]
 
-    map(i->set!(props[2], hdrs, i, Int(io.axis_lstarts[2] + (i-1)*io.axis_lincs[2])), 1:io.axis_lengths[2])
-    for idim = 3:ndims(io)
-        map(i->set!(props[idim], hdrs, i, idx[idim-2]), 1:io.axis_lengths[2])
+    for i = 1:io.axis_lengths[2]
+        set!(props[2], hdrs, i, Int(io.axis_lstarts[2] + (i-1)*io.axis_lincs[2]))
     end
-    proptt = prop(io, stockprop[:TRC_TYPE])
+    for idim = 3:ndims(io)
+        for i = 1:io.axis_lengths[2]
+            set!(props[idim], hdrs, i, idx[idim-2])
+        end
+    end
+    proptt = prop(io, :TRC_TYPE, Int32)
     map(i->set!(proptt, hdrs, i, tracetype[:live]), 1:io.axis_lengths[2])
     writeframe_impl(io, trcs, hdrs, Int(io.axis_lengths[2]), sub2ind(io, idx))
 end

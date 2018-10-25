@@ -173,15 +173,15 @@ mkdir(rundir)
         pincrs = [1.0, 1.0, 1.0, 1.0, 1.0]
 
         filename1 = "$(rundir)/file-1-$(randstring()).js"
-        propF32  = TracePropertyDef("PF32",  "PF32X",  Float32, 1)
-        propF64  = TracePropertyDef("PF64",  "PF64X",  Float64, 1)
-        propI32  = TracePropertyDef("PI32",  "PI32X",  Int32,   1)
-        propI64  = TracePropertyDef("PI64",  "PI64X",  Int64,   1)
-        propVF32 = TracePropertyDef("PVF32", "PVF32X", Float32, 2)
-        propVF64 = TracePropertyDef("PVF64", "PVF64X", Float64, 2)
-        propVI32 = TracePropertyDef("PVI32", "PVI32X", Int32,   2)
-        propVI64 = TracePropertyDef("PVI64", "PVI64X", Int64,   2)
-        propSTR  = TracePropertyDef("PSTR",  "PSTRX",  UInt8,  10)
+        propF32  = TracePropertyDef("PF32",  "PF32X",  Float32)
+        propF64  = TracePropertyDef("PF64",  "PF64X",  Float64)
+        propI32  = TracePropertyDef("PI32",  "PI32X",  Int32)
+        propI64  = TracePropertyDef("PI64",  "PI64X",  Int64)
+        propVF32 = TracePropertyDef("PVF32", "PVF32X", Vector{Float32}, 2)
+        propVF64 = TracePropertyDef("PVF64", "PVF64X", Vector{Float64}, 2)
+        propVI32 = TracePropertyDef("PVI32", "PVI32X", Vector{Int32}, 2)
+        propVI64 = TracePropertyDef("PVI64", "PVI64X", Vector{Int64}, 2)
+        propSTR  = TracePropertyDef("PSTR",  "PSTRX",  Vector{UInt8}, 10)
 
         propSTD  = TracePropertyDef("PSTD")
         @test propSTD.label == "PSTD"
