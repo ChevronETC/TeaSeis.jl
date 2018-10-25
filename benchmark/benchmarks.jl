@@ -30,7 +30,6 @@ for T in (Float32,Int16)
     SUITE["Frame operations"]["allocframehdrs,$T"] = @benchmarkable  allocframehdrs(io) setup=begin io,f=makeframe($T) end teardown=rmjsfile(f)
 
     SUITE["Frame operations"]["binary write,$T"] = @benchmarkable  begin io=open(f,"w");write(io,A);close(io) end setup=begin f=makefname();A=rand($T,$N1,$N2) end teardown=rm(f)
-    SUITE["Frame operations"]["binary read,$T"] = @benchmarkable  begin io=open(f);read(io,$T,$N1,$N2);close(io) end setup=begin f=makefname();write(f,rand($T,$N1,$N2)) end teardown=rm(f)
     SUITE["Frame operations"]["binary read!,$T"] = @benchmarkable  begin io=open(f);read!(io,A);close(io) end setup=begin f=makefname();A=rand($T,$N1,$N2);write(f,A) end teardown=rm(f)
 end
 
@@ -54,7 +53,6 @@ for (N,S) in (
     SUITE["Slice IO"][string("readhdrs!",D)] = @benchmarkable readhdrs!(io,h,$(S)...) setup=begin io,f,d,h=makevolumeread!($N,$S) end teardown=rmjsfile(f)
 
     SUITE["Slice IO"][string("binary write",D)] = @benchmarkable begin io=open(f,"w");write(io,d);close(io) end setup=begin f=makefname(); d=rand(Float32,$(N)...) end teardown=rm(f)
-    SUITE["Slice IO"][string("binary read",D)] = @benchmarkable begin io=open(f);read(io,Float32,$(N)...);close(io) end setup=begin f=makefname(); write(f,rand(Float32,$(N)...)) end teardown=rm(f)
     SUITE["Slice IO"][string("binary read!",D)] = @benchmarkable begin io=open(f);read!(io,d);close(io) end setup=begin d=zeros(Float32,$(N)...); f=makefname(); write(f,d) end teardown=rm(f)
 end
 
