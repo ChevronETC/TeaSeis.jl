@@ -1,6 +1,6 @@
 name = "TeaSeis"
 uuid = "db5f7d96-a200-5343-9fc6-a259b42289b2"
-version = "0.4.0"
+version = "0.3.0"
 
 [deps]
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
