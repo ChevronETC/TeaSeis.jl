@@ -1,7 +1,7 @@
 using TeaSeis
 
 # custom property with vector value:
-custompropdef = TracePropertyDef("SOU_X", "Source locations, x", Float64, 2)
+custompropdef = TracePropertyDef("SOU_X", "Source locations, x", Vector{Float64}, 2)
 
 # create and open a new javaseis file:
 io = jsopen("test.js", "w", axis_lengths=[501,40,6], properties=[custompropdef])
