@@ -356,7 +356,7 @@ The JavaSeis data format does not specify any trace properties.  However, there 
 pdef = TracePropertyDef("label", "description", Float32)
 pdef = TracePropertyDef("label", "description", Vector{Float32}, 2)
 ```
-The arguments to `TracePropertyDef` are the **label**, **description**, **type**, and, optionally, the **number of elements** stored in the property. The stock properties are defined in [src/stockprops.jl](src/stockprops.jl) using a Julia dictionary: `stockprop`.  For example, access a stock definition for the `TRACE` property:
+The arguments to `TracePropertyDef` are the **label**, **description**, **type**, and, optionally, the **number of elements** stored in the property. The stock properties are defined in `src/stockprops.jl` using a Julia dictionary: `stockprop`.  For example, access a stock definition for the `TRACE` property:
 ```julia
 pdef = stockprop[:TRACE]
 ```
