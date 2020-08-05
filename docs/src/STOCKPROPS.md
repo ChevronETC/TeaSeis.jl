@@ -1,6 +1,4 @@
-# TeaSeis.jl
-
-## Stock properties
+# Stock properties
 
 Symbol     | Description                         | Type    | Count
 -----------|-------------------------------------|---------|------

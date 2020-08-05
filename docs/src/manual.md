@@ -1,22 +1,4 @@
-[![Build Status](https://travis-ci.org/ChevronETC/TeaSeis.jl.svg?branch=master)](https://travis-ci.org/ChevronETC/TeaSeis.jl)
-[![Coverage Status](https://coveralls.io/repos/github/ChevronETC/TeaSeis.jl/badge.svg?branch=master)](https://coveralls.io/github/ChevronETC/TeaSeis.jl?branch=master)
-
-<h1>TeaSeis.jl</h1>
-TeaSeis.jl is a Julia library for reading and writing JavaSeis files (The name `TeaSeis.jl` was chosen instead of `JavaSeis.jl` due to potential trademark issues).  The JavaSeis file format is used in various software projects including <a href=https://www.landmark.solutions/seisspace-promax>SeisSpace</a>.  The original library is written in <a href=http://sourceforge.net/projects/javaseis>Java</a>.  There are also <a href=http://www.jseisio.com>C++</a> and <a href=https://github.com/asbjorn/pyjavaseis>Python</a> implementations available.  Similar to the C++ library, TeaSeis.jl is a stripped down version of the original Java library.  In particular, the intent is to only supply methods for reading and writing from and to JavaSeis files.
-
-```@contents
-depth = 3
-```
-
-# Trademarks
-* SEISSPACE and PROMAX are registered trademarks of LANDMARK GRAPHICS CORPORATION
-* Java is a registred trademark of Oracle
-
-# License and copyright
-The License and copyright information can be found in the source distribution: `LICENSE.txt`, `COPYRIGHT.txt`
-
-# Dependencies
-TeaSeis.jl depends on the [LightXML.jl](http://www.github.com/lindahua/LightXML.jl) package.
+# Manual
 
 # Obtaining TeaSeis.jl
 
@@ -130,58 +112,58 @@ This is useful for when you need to create the data-set on the master process, a
 
 The `jscreate` and, when operating in write `"w"` mode, `jsopen` functions take the following named optional arguments:
 
-* `similarto::String`<br>
+* `similarto::String`
 An existing JavaSeis dataset.  If set, then all other named arguments can be used to modify the data context that belongs to the existing JavaSeis dataset.
 
-* `description::String`<br>
+* `description::String`
 Description of dataset, if not set, then a description is parsed from the filename.
 
-* `mapped::Bool`<br>
+* `mapped::Bool`
 If the dataset is full (no missing frames/traces), then it may be more efficient to set this to `false`.  Defaults to `true`.
 
-* `nextents::Int`<br>
+* `nextents::Int`
 The number of file-extents used to store the data.  If not set, then a heuristic is used to choose the number of extents.
 
-* `secondaries::Array{String, 1}`<br>
+* `secondaries::Array{String, 1}`
 An array of file-system locations used to store the file extents.  If not set, then *primary* storage is used.
 
-* `datatype::String`<br>
+* `datatype::String`
 Examples are `CMP`, `SHOT`, etc.  If not set, then `UNKNOWN` is used.
 
-* `dataformat::Type`<br>
+* `dataformat::Type`
 Choose from `Float32`, and `Int16`.  If not set, then `Float32` is used.
 
-* `dataorder::String`<br>
+* `dataorder::String`
 (not supported)
 
-* `axis_propdefs::Array{TracePropertyDef, 1}`<br>
+* `axis_propdefs::Array{TracePropertyDef, 1}`
 Trace properties corresponding to JavaSeis axes.  If not set, then `SAMPLE`, `TRACE`, `FRAME`, `VOLUME` and `HYPRCUBE` are used.
 
-* `axis_units::Array{String, 1}`<br>
+* `axis_units::Array{String, 1}`
 Units corresponding to JavaSeis axes. e.g. `SECONDS`, `METERS`, etc.  If not set, then `UNKNOWN` is used.
 
-* `axis_domains::Array{String, 1}`<br>
+* `axis_domains::Array{String, 1}`
 Domains corresponding to JavaSeis axes. e.g. `SPACE`, `TIME`, etc.  If not set, then `UNKNOWN` is used.
 
-* `axis_lstarts::Array{Int32, 1}`<br>
+* `axis_lstarts::Array{Int32, 1}`
 Logical origins for each axis.  If not set, then `1` is used for the logical origin of each axis.
 
-* `axis_lincs::Array{Int32, 1}`<br>
+* `axis_lincs::Array{Int32, 1}`
 Logical increments for each axis.  If not set, then `1` is used for the logical increments of each axis.
 
-* `axis_pstarts::Array{Float64, 1}`<br>
+* `axis_pstarts::Array{Float64, 1}`
 Physical origins for each axis.  If not set, then `0.0` is used for the physical origin of each axis.
 
-* `axis_pincs::Array{Float64, 1}`<br>
+* `axis_pincs::Array{Float64, 1}`
 Physical increments for each axis.  If not set, then `1.0` is used for the physical increments of each axis.
 
-* `properties::Array{TracePropertyDef, 1}`<br>
+* `properties::Array{TracePropertyDef, 1}`
 An array of custom trace properties.  These are in addition to a minimal set of trace properties listed in the ProMax manual.
 
-* `dataproperties::Array{DataProperty, 1}`<br>
+* `dataproperties::Array{DataProperty, 1}`
 An array of custom data properties.  One property per data-set rather than one property per trace as in `properties` above.
 
-* `geometry::Geometry`<br>
+* `geometry::Geometry`
 An optional three point geometry can be embedded in the JavaSeis file.
 
 * `properties_add::Array{TracePropertyDef}`
@@ -230,7 +212,7 @@ readframe!(io, trcs, hdrs, ifrm, ivol, ihyp)    # read from 5D data
 readframe!(io, trcs, hdrs, ifrm, ivol, ihyp, i6) # read from 6D data
 ...
 ```
-Note that `readframe!` methods returns the <b>fold</b> (number of live traces in the frame).
+Note that `readframe!` methods returns the *fold** (number of live traces in the frame).
 
 Similar methods exist for reading only headers:
 ```julia
@@ -274,9 +256,9 @@ end
 ```
 where `length(io)` is the number of frames in `io`, `ind2sub` converts the linear index `i` into n-tuple indexing dimensions 3 and higher.  Of course, this can also be used with `readframe!`, `readframetrcs`, `readframetrcs!`, `readframehdrs` and `readframehdrs!`.
 
-<h3> IMPORTANT NOTE: </h3>
+### IMPORTANT NOTE:
 
-It is <b>very</b> important to note that the JavaSeis format left-justifies all live traces in a frame.  This makes reading and writing data more efficient. However, if you are reading or writing non-full frames, extra care must be taken.  Two methods (`leftjustify!` and `regularize!`) are provided to help with this situation.
+It is **very** important to note that the JavaSeis format left-justifies all live traces in a frame.  This makes reading and writing data more efficient. However, if you are reading or writing non-full frames, extra care must be taken.  Two methods (`leftjustify!` and `regularize!`) are provided to help with this situation.
 
 Writing a non-full frame:
 ```julia
@@ -369,12 +351,12 @@ write(io, rehsape(trcs, 10, 1, 1), :, 1, 1)
 
 # Trace Properties
 
-The JavaSeis data format does not specify any trace properties.  However, there are commonly used (<b>stock</b>) properties (listed in [STOCKPROPS.md](STOCKPROPS.md), as well as a minimal set of properties that are expected by SeisSpace (listed in [SSPROPS.md](SSPROPS.md)).  It is unusual when a stock property does not suit your needs.  But, if need be, you can define a custom property using the `TracePropertyDef` constructor:
+The JavaSeis data format does not specify any trace properties.  However, there are commonly used (**stock**) properties (listed in [STOCKPROPS.md](STOCKPROPS.md), as well as a minimal set of properties that are expected by SeisSpace (listed in [SSPROPS.md](SSPROPS.md)).  It is unusual when a stock property does not suit your needs.  But, if need be, you can define a custom property using the `TracePropertyDef` constructor:
 ```julia
 pdef = TracePropertyDef("label", "description", Float32)
 pdef = TracePropertyDef("label", "description", Vector{Float32}, 2)
 ```
-The arguments to `TracePropertyDef` are the <b>label</b>, <b>description</b>, <b>type</b>, and, optionally, the <b>number of elements</b> stored in the property. The stock properties are defined in [src/stockprops.jl](src/stockprops.jl) using a Julia dictionary: `stockprop`.  For example, access a stock definition for the `TRACE` property:
+The arguments to `TracePropertyDef` are the **label**, **description**, **type**, and, optionally, the **number of elements** stored in the property. The stock properties are defined in [src/stockprops.jl](src/stockprops.jl) using a Julia dictionary: `stockprop`.  For example, access a stock definition for the `TRACE` property:
 ```julia
 pdef = stockprop[:TRACE]
 ```
@@ -442,11 +424,11 @@ geom = Geometry(u1=1,un=2,v1=1,vn=2,w1=1,wn=2,ux=1.0,uy=0.0,uz=0.0,vx=0.0,vy=1.0
 ```
 where `(ox,oy,oz)` is the origin, `(ux,uy,uz)` is a vector to define the end of the `u-axis` (e.g. cross-line axis), `(vx,vy,vz)` is the end of the `v-axis` (e.g. the in-line axis), and `(wx,wy,wz)` is the end of the `w-axis` (e.g. the depth axis).  `(u1,un)` are the first and last bin indices along the `u-axis`, `(v1,vn)` are the first and last bin indices along the `v-axis`, and `(w1,wn)` are the first and last bin indices along the `w-axis`.  TeaSeis.jl does not provide any tools for using this geometry to manipulate trace coordinates.  I would recommend that this functionality be put into a separate package.
 
-<img src="geometry.png" alt="Geometry">
+![Geometry](geometry.png)
 
 # Convenience methods and dictionaries
 
-For convenience and consistency, we supply several dictionaries.  In addition to the dictionary for trace property definitions and trace type (both described above), there are dictionaries for <b>data domain</b> `stockdomain`, <b>units</b> `stockunit`, and <b>data type</b> `stockdatatype`.  All of these are listed in [STOCKPROPS.md](STOCKPROPS.md).
+For convenience and consistency, we supply several dictionaries.  In addition to the dictionary for trace property definitions and trace type (both described above), there are dictionaries for **data domain** `stockdomain`, **units** `stockunit`, and **data type** `stockdatatype`.  All of these are listed in [STOCKPROPS.md](STOCKPROPS.md).
 
 Example usage within the jsopen method:
 ```julia
@@ -492,14 +474,4 @@ empty!(io)                  # remove extends and secondary folders, but keep met
 cp(src, dst)                # create a new JavaSeis file `dst::AbstractString` that is a copy of `src::JSeis`, optional named argument: `secondaries=` - change file extents location
 mv(src, dst)                # move a JavaSeis file to `dst::AbstractString` from `src::JSeis`, optional named argument: `secondaries=` - change file extents location
 copy!(io, hdrs, io1, hdrs1) # copy values from `hdrs1::Array{UInt8,2}` to `hdrs::Array{UInt8,2}`
-```
-
-# API
-
-```@index
-```
-
-```@autodocs
-Modules = [TeaSeis]
-Order   = [:function, :type]
 ```

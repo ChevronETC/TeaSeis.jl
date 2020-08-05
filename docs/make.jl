@@ -1,6 +1,16 @@
 using Documenter, TeaSeis
 
 makedocs(
-    modules = [TeaSeis]
+    sitename="TeaSeis",
+    modules=[TeaSeis],
+    pages = [
+        "index.md",
+        "manual.md",
+        "reference.md",
+        "STOCKPROPS.md",
+        "SSPROPS.md"]
 )
-cp("build/README.md", "../README.md", force=true)
+
+deploydocs(
+    repo = "github.com/ChevronETC/TeaSeis.jl.git"
+)

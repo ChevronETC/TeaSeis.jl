@@ -1,6 +1,5 @@
-# TeaSeis.jl
-
-## SeisSpace guaranteed properties for a JavaSeis dataset
+# SeisSpace properties
+Properties that are guaranteed for a JavaSeis dataset that is associated with SeisSpace
 
 Symbol    | Description                         | Type    | Count
 ----------|-------------------------------------|---------|------
