@@ -266,7 +266,11 @@ function jsopen_write(io::JSeis, nextents::Int, ndim::Int, description::String, 
     # description, if not set by user, we grab it from the filename
     if length(description) == 0
         io.description = io.filename[end-2:end] == ".js" ? io.filename[1:end-3] : io.filename
-        io.description = split(splitpath(io.description)[end], '@')[end]
+        if VERSION < v"1.1"
+            io.description = split(io.description, ['/','@'])[end]
+        else
+            io.description = split(splitpath(io.description)[end], '@')[end]
+        end
     else
         io.description = description
     end
