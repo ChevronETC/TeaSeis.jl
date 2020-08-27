@@ -26,4 +26,4 @@ git (https://try.github.io/levels/1/challenges/1):
 We try to follow the same coding conventions as https://github.com/JuliaLang/julia.
 This primarily means using 4 spaces to indent (no tabs).  In addition, we make a
 best attempt to follow the guidelines in the style guide chapter of the julia
-manual: http://docs.julialang.org/en/release-0.5/manual/style-guide/
+manual: https://docs.julialang.org/en/latest/manual/style-guide/
