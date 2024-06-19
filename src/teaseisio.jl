@@ -61,8 +61,8 @@ named function parameters are available:
 * `axis_lincs::Array{Int}` Logical increments for each axis.  If not set, then `1` is used for the logical increments of each axis.
 * `axis_pstarts::Array{Float64}` Physical origins for each axis.  If not set, then `0.0` is used for the physical origin of each axis.
 * `axis_pincs::Array{Float64}` Physical increments for each axis.  If not set, then `1.0` is used for the physical increments of each axis.
-* `data_properties::Array{DataProperty}` An array of custom trace properties.  These are in addition to the properties listed in `SSPROPS.md`.
-* `properties::Array{TracePropertyDef}` An array of custom data properties.  One property per data-set rather than one property per trace as in `properties` above.
+* `properties::Array{TracePropertyDef}` An array of custom trace properties.  These are in addition to the properties listed in `SSPROPS.md`.
+* `data_properties::Array{DataProperty}` An array of custom data properties.  One property per data-set rather than one property per trace as in `properties` above.
 * `geometry::Geometry` An optional three point geometry can be embedded in the JavaSeis file.
 * `secondaries::Array{String}` An array of file-system locations used to store the file extents.  If not set, then *primary* storage is used.
 * `nextents::Int64` The number of file-extents used to store the data.  If not set, then a heuristic is used to choose the number of extents.  The heuristic is: min(256,10 + (FRAMEWORK_SIZE)/(2*1024^3)).
