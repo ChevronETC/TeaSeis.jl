@@ -715,3 +715,21 @@ end
     write(io, trcs, :, :, :)
     @test isfile(joinpath(c,"second","foo","test.js","TraceFile0"))
 end
+
+# issue https://github.com/ChevronETC/TeaSeis.jl/issues/28
+@testset "teaseisio, VFIO_MAXPOS should be the size of the extent rather than an offset" begin
+    c = pwd()
+    ENV["JAVASEIS_DATA_HOME"] = joinpath(c, "primary")
+    io = jsopen(joinpath(ENV["JAVASEIS_DATA_HOME"], "test.js"), "w", axis_lengths=[3,3,10], secondaries=[joinpath(c,"second")], nextents=3)
+    close(io)
+    io = jsopen(joinpath(ENV["JAVASEIS_DATA_HOME"], "test.js"))
+
+    expected_extent_size = sizeof(Float32)*size(io,1)*size(io,2)*(div(10,3)+1)
+    expected_total_size = sizeof(Float32)*prod(size(io))
+    @test io.trcextents[1].size == expected_extent_size
+    @test io.trcextents[2].size == expected_extent_size
+
+    # the last extent size is computed from, in part, VFIO_MAXPOS
+    @test io.trcextents[3].size == expected_total_size - 2*expected_extent_size
+    rm(io)
+end
